@@ -1,176 +1,33 @@
 @import "tailwindcss";
 
-/* CSS Variables for dynamic theming */
-:root {
-  /* Base color values */
-  --gunmetal-value: #022b3a;
-  --teal-value: #1f7a8c;
-  --columbia-blue-value: #bfdbf7;
-  --lavender-web-value: #e1e5f2;
-  --white-value: #ffffff;
-
-  /* Semantic mappings */
-  --background: #ffffff;
-  --foreground: #022b3a;
-}
-
-/* Tailwind v4 Theme Configuration - Must be top-level */
+/* Tailwind v4 Theme Configuration */
 @theme {
   /* Custom Color Palette */
   --color-gunmetal: #022b3a;
   --color-teal: #1f7a8c;
   --color-columbia-blue: #bfdbf7;
   --color-lavender-web: #e1e5f2;
-  --color-white: #ffffff;
-
-  /* Semantic Colors */
-  --color-background: #ffffff;
-  --color-foreground: #022b3a;
-  --color-muted: #e1e5f2;
-  --color-accent: #bfdbf7;
-  --color-border: #e1e5f2;
-
-  /* Status Colors */
-  --color-success: #10b981;
-  --color-error: #ef4444;
-  --color-warning: #f59e0b;
 
   /* Font Families */
-  --font-sans: Inter, system-ui, -apple-system, sans-serif;
-  --font-mono: JetBrains Mono, SF Mono, monospace;
-
-  /* Custom Shadows */
-  --shadow-xs: 0 1px 2px 0 rgb(2 43 58 / 0.05);
-  --shadow-sm: 0 1px 3px 0 rgb(2 43 58 / 0.1), 0 1px 2px -1px rgb(2 43 58 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(2 43 58 / 0.1), 0 2px 4px -2px rgb(2 43 58 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(2 43 58 / 0.1), 0 4px 6px -4px rgb(2 43 58 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(2 43 58 / 0.1), 0 8px 10px -6px rgb(2 43 58 / 0.1);
+  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'SF Mono', monospace;
 }
 
-/* Global Reset */
-*, *::before, *::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* Custom Utilities Layer */
+@layer utilities {
+  /* Animation Classes */
+  .animate-fadeIn {
+    animation: fadeIn 0.4s ease forwards;
+  }
 
-/* HTML & Body */
-html {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  font-size: 16px;
-}
+  .animate-slideIn {
+    animation: slideIn 0.4s ease forwards;
+  }
 
-body {
-  font-family: Inter, system-ui, -apple-system, sans-serif;
-  line-height: 1.6;
-  color: #022b3a;
-  background: #ffffff;
-  min-height: 100vh;
-}
-
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  color: #022b3a;
-}
-
-h1 {
-  font-size: 3rem;
-  font-weight: 700;
-}
-
-h2 {
-  font-size: 2.25rem;
-}
-
-h3 {
-  font-size: 1.875rem;
-}
-
-h4 {
-  font-size: 1.5rem;
-}
-
-h5 {
-  font-size: 1.25rem;
-}
-
-h6 {
-  font-size: 1rem;
-}
-
-/* Links */
-a {
-  color: #1f7a8c;
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-
-a:hover {
-  color: #022b3a;
-}
-
-/* Forms */
-input,
-textarea,
-select {
-  font-family: inherit;
-  font-size: 1rem;
-  line-height: inherit;
-}
-
-/* Buttons */
-button {
-  font-family: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-/* Focus Styles */
-:focus-visible {
-  outline: 2px solid #1f7a8c;
-  outline-offset: 2px;
-  border-radius: 0.375rem;
-}
-
-/* Selection */
-::selection {
-  background: #bfdbf7;
-  color: #022b3a;
-}
-
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #e1e5f2;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1f7a8c;
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #022b3a;
-}
-
-/* Utility Classes */
-.container {
-  width: 100%;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+  /* Text Balance */
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 
 /* Animation Keyframes */
@@ -203,35 +60,4 @@ button {
   to {
     transform: rotate(360deg);
   }
-}
-
-/* Animation Classes */
-.animate-fadeIn {
-  animation: fadeIn 0.4s ease forwards;
-}
-
-.animate-slideIn {
-  animation: slideIn 0.4s ease forwards;
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* Text Balance */
-.text-balance {
-  text-wrap: balance;
-}
-
-/* Screen Reader Only */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
 }
