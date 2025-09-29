@@ -1,15 +1,14 @@
 import { EphemeralKeyPair, KeylessAccount } from "@aptos-labs/ts-sdk";
 import { aptos } from "./aptos";
 import { jwtDecode } from "jwt-decode";
+import { Serializer } from "@aptos-labs/ts-sdk";
 
 const STORAGE_KEY = "aptos_ephemeral_key_pairs";
 
 export interface StoredEphemeralKeyPair {
-  publicKey: string;
-  privateKey: string;
+  bytes: string; // Hex string of serialized bytes
   nonce: string;
   expiryDateSecs: number;
-  blinder: string;
 }
 
 export interface DecodedJWT {
@@ -31,17 +30,17 @@ export function storeEphemeralKeyPair(
   ephemeralKeyPair: EphemeralKeyPair
 ): string {
   const nonce = ephemeralKeyPair.nonce;
-
   const storedPairs = getStoredEphemeralKeyPairs();
 
+  // Serialize the ephemeral key pair to bytes
+  const serializer = new Serializer();
+  ephemeralKeyPair.serialize(serializer);
+  const bytes = serializer.toUint8Array();
+
   const serialized: StoredEphemeralKeyPair = {
-    publicKey: ephemeralKeyPair.publicKey.toString(),
-    privateKey: ephemeralKeyPair.privateKey.toString(),
+    bytes: Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(''),
     nonce: nonce,
     expiryDateSecs: ephemeralKeyPair.expiryDateSecs,
-    blinder: Array.from(ephemeralKeyPair.blinder)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join(''),
   };
 
   storedPairs[nonce] = serialized;
@@ -80,16 +79,13 @@ export function getEphemeralKeyPair(nonce: string): EphemeralKeyPair | null {
   }
 
   try {
-    const blinder = new Uint8Array(
-      stored.blinder.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || []
+    // Convert hex string back to bytes
+    const bytes = new Uint8Array(
+      stored.bytes.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || []
     );
 
-    return new EphemeralKeyPair({
-      privateKey: stored.privateKey,
-      publicKey: stored.publicKey,
-      expiryDateSecs: stored.expiryDateSecs,
-      blinder,
-    });
+    // Deserialize from bytes
+    return EphemeralKeyPair.fromBytes(bytes);
   } catch (error) {
     console.error("Error reconstructing ephemeral key pair:", error);
     return null;
