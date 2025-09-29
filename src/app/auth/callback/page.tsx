@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getEphemeralKeyPair, deriveKeylessAccount } from "@/lib/keyless";
+import { validateJWT, validateNonce } from "@/lib/validation";
 
 export default function AuthCallbackPage() {
   const [status, setStatus] = useState("Processing authentication...");
@@ -20,11 +21,23 @@ export default function AuthCallbackPage() {
           throw new Error("No ID token received from Google");
         }
 
+        // Validate JWT
+        const jwtValidation = validateJWT(idToken);
+        if (!jwtValidation.isValid) {
+          throw new Error(`Invalid JWT: ${jwtValidation.error}`);
+        }
+
         const decodedToken = JSON.parse(atob(idToken.split(".")[1]));
         const nonce = decodedToken.nonce;
 
         if (!nonce) {
           throw new Error("No nonce found in token");
+        }
+
+        // Validate nonce
+        const nonceValidation = validateNonce(nonce);
+        if (!nonceValidation.isValid) {
+          throw new Error(`Invalid nonce: ${nonceValidation.error}`);
         }
 
         setStatus("Retrieving ephemeral key...");

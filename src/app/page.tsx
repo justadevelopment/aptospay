@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { validateEmail, validatePaymentAmount, sanitizeInput } from "@/lib/validation";
 
 export default function Home() {
   const [amount, setAmount] = useState("");
@@ -9,11 +10,37 @@ export default function Home() {
   const [paymentLink, setPaymentLink] = useState("");
   const [copied, setCopied] = useState(false);
 
+  const [errors, setErrors] = useState<{ amount?: string; recipient?: string }>({});
+
   const generatePaymentLink = () => {
-    if (!amount || !recipient) return;
+    // Reset errors
+    setErrors({});
+
+    // Validate inputs
+    const amountValidation = validatePaymentAmount(amount);
+    const emailValidation = validateEmail(recipient);
+
+    const newErrors: { amount?: string; recipient?: string } = {};
+
+    if (!amountValidation.isValid) {
+      newErrors.amount = amountValidation.error;
+    }
+
+    if (!emailValidation.isValid) {
+      newErrors.recipient = emailValidation.error;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // Sanitize inputs
+    const sanitizedAmount = sanitizeInput(amount);
+    const sanitizedRecipient = sanitizeInput(recipient).toLowerCase();
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const link = `${baseUrl}/pay/$${amount}/to/${recipient}`;
+    const link = `${baseUrl}/pay/$${sanitizedAmount}/to/${sanitizedRecipient}`;
     setPaymentLink(link);
   };
 
@@ -57,10 +84,21 @@ export default function Home() {
                   type="number"
                   id="amount"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => {
+                    setAmount(e.target.value);
+                    if (errors.amount) setErrors({ ...errors, amount: undefined });
+                  }}
                   placeholder="50.00"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  step="0.01"
+                  min="0.01"
+                  max="1000000"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.amount ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 />
+                {errors.amount && (
+                  <p className="text-red-500 text-xs mt-1">{errors.amount}</p>
+                )}
               </div>
 
               <div>
@@ -71,10 +109,18 @@ export default function Home() {
                   type="email"
                   id="recipient"
                   value={recipient}
-                  onChange={(e) => setRecipient(e.target.value)}
+                  onChange={(e) => {
+                    setRecipient(e.target.value);
+                    if (errors.recipient) setErrors({ ...errors, recipient: undefined });
+                  }}
                   placeholder="alice@gmail.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.recipient ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 />
+                {errors.recipient && (
+                  <p className="text-red-500 text-xs mt-1">{errors.recipient}</p>
+                )}
               </div>
 
               <button
