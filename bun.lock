@@ -5,6 +5,8 @@
       "name": "aptospay",
       "dependencies": {
         "@aptos-labs/ts-sdk": "^5.1.0",
+        "@fontsource/inter": "^5.2.8",
+        "@fontsource/jetbrains-mono": "^5.2.8",
         "jwt-decode": "^4.0.0",
         "next": "15.5.4",
         "react": "19.1.0",
@@ -55,6 +57,10 @@
     "@eslint/object-schema": ["@eslint/object-schema@2.1.6", "", {}, "sha512-RBMg5FRL0I0gs51M/guSAj5/e14VQ4tpZnQNWwuDT66P14I43ItmPfIZRhO9fUVIPOAQXU47atlywZ/czoqFPA=="],
 
     "@eslint/plugin-kit": ["@eslint/plugin-kit@0.3.5", "", { "dependencies": { "@eslint/core": "^0.15.2", "levn": "^0.4.1" } }, "sha512-Z5kJ+wU3oA7MMIqVR9tyZRtjYPr4OC004Q4Rw7pgOKUOKkJfZ3O24nz3WYfGRpMDNmcOi3TwQOmgm7B7Tpii0w=="],
+
+    "@fontsource/inter": ["@fontsource/inter@5.2.8", "", {}, "sha512-P6r5WnJoKiNVV+zvW2xM13gNdFhAEpQ9dQJHt3naLvfg+LkF2ldgSLiF4T41lf1SQCM9QmkqPTn4TH568IRagg=="],
+
+    "@fontsource/jetbrains-mono": ["@fontsource/jetbrains-mono@5.2.8", "", {}, "sha512-6w8/SG4kqvIMu7xd7wt6x3idn1Qux3p9N62s6G3rfldOUYHpWcc2FKrqf+Vo44jRvqWj2oAtTHrZXEP23oSKwQ=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 
