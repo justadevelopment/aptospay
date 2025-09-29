@@ -267,7 +267,7 @@ export default function Home() {
 
             <div className="flex items-center justify-center space-x-12">
               <div className="text-center">
-                <div className="text-3xl font-bold text-teal mb-1">< 1s</div>
+                <div className="text-3xl font-bold text-teal mb-1">&lt; 1s</div>
                 <div className="text-sm text-gunmetal/60">Transaction time</div>
               </div>
               <div className="text-center">

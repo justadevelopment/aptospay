@@ -215,7 +215,7 @@ export default function DashboardPage() {
               </svg>
             </div>
             <h3 className="font-semibold text-gunmetal mb-1">Low Fees</h3>
-            <p className="text-sm text-gunmetal/60">< $0.01 per transaction</p>
+            <p className="text-sm text-gunmetal/60">&lt; $0.01 per transaction</p>
           </div>
         </div>
       </main>
