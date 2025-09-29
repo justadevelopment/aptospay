@@ -69,9 +69,9 @@ export default function Home() {
             <Image
               src="/aptospay.png"
               alt="AptosPay Logo"
-              width={32}
-              height={32}
-              className="h-8 w-8"
+              width={28}
+              height={28}
+              className="h-7 w-7"
               priority
             />
             <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
@@ -301,9 +301,9 @@ export default function Home() {
               <Image
                 src="/aptospay.png"
                 alt="AptosPay Logo"
-                width={20}
-                height={20}
-                className="h-5 w-5 opacity-60"
+                width={16}
+                height={16}
+                className="h-4 w-4 opacity-60"
               />
               <span className="text-sm font-medium text-gunmetal/60" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
               <span className="text-sm text-gunmetal/60">© 2025</span>

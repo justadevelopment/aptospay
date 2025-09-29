@@ -74,9 +74,9 @@ export default function DashboardPage() {
               <Image
                 src="/aptospay.png"
                 alt="AptosPay Logo"
-                width={32}
-                height={32}
-                className="h-8 w-8"
+                width={28}
+                height={28}
+                className="h-7 w-7"
                 priority
               />
               <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
