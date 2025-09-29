@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function ClaimSuccessPage() {
+function ClaimSuccessContent() {
   const [amount, setAmount] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [address, setAddress] = useState<string>("");
@@ -77,5 +77,17 @@ export default function ClaimSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ClaimSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    }>
+      <ClaimSuccessContent />
+    </Suspense>
   );
 }

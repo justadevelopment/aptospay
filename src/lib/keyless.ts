@@ -1,7 +1,5 @@
-import { EphemeralKeyPair, KeylessAccount } from "@aptos-labs/ts-sdk";
+import { EphemeralKeyPair, KeylessAccount, Serializer } from "@aptos-labs/ts-sdk";
 import { aptos } from "./aptos";
-import { jwtDecode } from "jwt-decode";
-import { Serializer } from "@aptos-labs/ts-sdk";
 
 const STORAGE_KEY = "aptos_ephemeral_key_pairs";
 
@@ -9,17 +7,6 @@ export interface StoredEphemeralKeyPair {
   bytes: string; // Hex string of serialized bytes
   nonce: string;
   expiryDateSecs: number;
-}
-
-export interface DecodedJWT {
-  sub: string;
-  aud: string;
-  email?: string;
-  email_verified?: boolean;
-  iss: string;
-  exp: number;
-  iat: number;
-  nonce: string;
 }
 
 export function generateEphemeralKeyPair(): EphemeralKeyPair {
