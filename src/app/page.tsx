@@ -65,16 +65,16 @@ export default function Home() {
       {/* Clean Navigation */}
       <nav className="border-b border-lavender-web">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-3">
+          <Link href="/" className="flex items-center gap-3">
             <Image
               src="/aptospay.png"
               alt="AptosPay Logo"
-              width={45}
-              height={45}
+              width={40}
+              height={40}
               className="h-10 w-10"
               priority
             />
-            <span className="text-2xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+            <span className="text-2xl font-semibold text-gunmetal leading-none" style={{ fontFamily: "'Outfit', sans-serif", marginTop: "2px" }}>aptospay</span>
           </Link>
 
           <div className="flex items-center space-x-6">
@@ -297,15 +297,15 @@ export default function Home() {
       <footer className="border-t border-lavender-web py-12">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0">
+            <div className="flex items-center gap-2 mb-4 md:mb-0">
               <Image
                 src="/aptospay.png"
                 alt="AptosPay Logo"
-                width={30}
-                height={30}
+                width={24}
+                height={24}
                 className="h-6 w-6 opacity-60"
               />
-              <span className="text-sm font-medium text-gunmetal/60" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+              <span className="text-sm font-medium text-gunmetal/60 leading-none" style={{ fontFamily: "'Outfit', sans-serif", marginTop: "1px" }}>aptospay</span>
               <span className="text-sm text-gunmetal/60">© 2025</span>
             </div>
 
