@@ -64,7 +64,7 @@ function ClaimSuccessContent() {
           </h1>
 
           <p className="text-gunmetal/60">
-            You've successfully claimed <span className="font-semibold text-gunmetal">${amount}</span>
+            You&apos;ve successfully claimed <span className="font-semibold text-gunmetal">${amount}</span>
           </p>
         </div>
 

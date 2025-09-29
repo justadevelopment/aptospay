@@ -93,7 +93,7 @@ export default function PaymentClaimPage({
         <div className="bg-white border-2 border-lavender-web rounded-2xl p-8 shadow-sm">
           {/* Payment Amount Display */}
           <div className="text-center mb-8">
-            <p className="text-sm font-medium text-gunmetal/60 mb-2">You're receiving</p>
+            <p className="text-sm font-medium text-gunmetal/60 mb-2">You&apos;re receiving</p>
             <div className="flex items-center justify-center">
               <span className="text-5xl font-bold text-gunmetal">${amount}</span>
             </div>
