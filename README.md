@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AptosPay
 
-## Getting Started
+A Venmo-style payment application built on Aptos blockchain that enables users to send and receive payments without requiring crypto wallets.
 
-First, run the development server:
+## Features
 
+- **No Wallet Required**: Recipients can claim funds using just their email via Google OAuth
+- **Keyless Accounts**: Leverages Aptos Keyless to create blockchain accounts automatically
+- **Payment Links**: Generate shareable links for any amount
+- **Instant Transfers**: Sub-second finality on Aptos blockchain
+
+## Tech Stack
+
+- Next.js 15.5.4 (App Router)
+- TypeScript 5.9.2
+- Aptos TypeScript SDK
+- Tailwind CSS 4.1.13
+- Google OAuth for authentication
+
+## Setup
+
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+bun install
+```
+
+2. Configure environment variables in `.env.local`:
+```env
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
+NEXT_PUBLIC_GOOGLE_REDIRECT_URI=http://localhost:3000/auth/callback
+NEXT_PUBLIC_APTOS_NETWORK=testnet
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+3. Run the development server:
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How It Works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Create Payment Link**: Enter amount and recipient email
+2. **Share Link**: Send the generated link to the recipient
+3. **Claim Payment**: Recipient signs in with Google
+4. **Auto Account Creation**: Aptos Keyless account created automatically
+5. **Instant Transfer**: Funds transferred immediately to the new account
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/              # Next.js App Router pages
+├── components/       # React components
+├── lib/              # Utilities and Aptos integration
+├── types/            # TypeScript type definitions
+└── styles/           # CSS files
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project uses:
+- **Bun** as the package manager
+- **Turbopack** for fast development builds
+- **Aptos Testnet** for blockchain interactions
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
