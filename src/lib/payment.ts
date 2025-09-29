@@ -1,8 +1,8 @@
 import { Account, KeylessAccount } from "@aptos-labs/ts-sdk";
-import { aptos, transferAPT, USDC_ADDRESS } from "./aptos";
+import { transferAPT } from "./aptos";
 import type { PaymentLink, PaymentRequest } from "@/types";
 
-export async function createPaymentLink(request: PaymentRequest): PaymentLink {
+export async function createPaymentLink(request: PaymentRequest): Promise<PaymentLink> {
   const linkId = generateLinkId();
 
   const paymentLink: PaymentLink = {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 import { generateEphemeralKeyPair, storeEphemeralKeyPair, createGoogleAuthUrl } from "@/lib/keyless";
 
 export default function PaymentClaimPage({
@@ -13,8 +12,6 @@ export default function PaymentClaimPage({
   const [recipient, setRecipient] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [redirecting, setRedirecting] = useState(false);
-  const searchParams = useSearchParams();
-  const router = useRouter();
 
   useEffect(() => {
     const parseParams = async () => {

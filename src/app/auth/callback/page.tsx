@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getEphemeralKeyPair, deriveKeylessAccount } from "@/lib/keyless";
-import { transferAPT } from "@/lib/aptos";
 
 export default function AuthCallbackPage() {
   const [status, setStatus] = useState("Processing authentication...");

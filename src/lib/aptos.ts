@@ -3,7 +3,6 @@ import {
   AptosConfig,
   Network,
   Account,
-  Ed25519PrivateKey,
   EphemeralKeyPair,
   KeylessAccount
 } from "@aptos-labs/ts-sdk";

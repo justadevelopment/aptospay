@@ -113,8 +113,6 @@ export async function deriveKeylessAccount(
   jwt: string,
   ephemeralKeyPair: EphemeralKeyPair
 ): Promise<KeylessAccount> {
-  const decodedJwt = jwtDecode<DecodedJWT>(jwt);
-
   cleanupExpiredKeyPairs();
 
   const keylessAccount = await aptos.deriveKeylessAccount({
