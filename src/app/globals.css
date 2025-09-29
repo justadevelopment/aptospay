@@ -11,6 +11,7 @@
   /* Font Families */
   --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-family-mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --font-family-brand: 'Outfit', 'Inter', sans-serif;
 }
 
 /* Custom Utilities Layer */

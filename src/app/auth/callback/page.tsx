@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { getEphemeralKeyPair, deriveKeylessAccount } from "@/lib/keyless";
 import { validateJWT, validateNonce } from "@/lib/validation";
+import "@fontsource/outfit/400.css";
+import "@fontsource/outfit/500.css";
+import "@fontsource/outfit/600.css";
 
 export default function AuthCallbackPage() {
   const [status, setStatus] = useState("Processing authentication...");
@@ -76,27 +80,63 @@ export default function AuthCallbackPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-red-50">
-        <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Authentication Failed</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => router.push("/")}
-            className="w-full py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-          >
-            Return Home
-          </button>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="max-w-md w-full px-6">
+          {/* Logo */}
+          <div className="flex items-center justify-center space-x-3 mb-8">
+            <Image
+              src="/aptospay.png"
+              alt="AptosPay Logo"
+              width={50}
+              height={50}
+              className="h-12 w-12"
+              priority
+            />
+            <span className="text-3xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+          </div>
+
+          {/* Error Card */}
+          <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
+            <div className="flex items-center justify-center w-16 h-16 bg-red-50 rounded-full mb-4 mx-auto">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-semibold text-gunmetal text-center mb-3">Authentication Failed</h1>
+            <p className="text-gunmetal/60 text-center mb-6">{error}</p>
+            <button
+              onClick={() => router.push("/")}
+              className="w-full py-3 bg-gunmetal text-white rounded-xl font-semibold hover:bg-gunmetal/90 transition-all"
+            >
+              Return Home
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="max-w-md w-full px-6">
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-lg font-semibold text-gray-700">{status}</p>
+          {/* Logo */}
+          <div className="flex items-center space-x-3 mb-8">
+            <Image
+              src="/aptospay.png"
+              alt="AptosPay Logo"
+              width={50}
+              height={50}
+              className="h-12 w-12"
+              priority
+            />
+            <span className="text-3xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+          </div>
+
+          {/* Loading State */}
+          <div className="w-16 h-16 border-4 border-teal border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-lg font-medium text-gunmetal">{status}</p>
+          <p className="text-sm text-gunmetal/60 mt-2">Please wait while we set up your account...</p>
         </div>
       </div>
     </div>

@@ -3,10 +3,14 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/outfit/400.css";
+import "@fontsource/outfit/500.css";
+import "@fontsource/outfit/600.css";
 
 function ClaimSuccessContent() {
   const [amount, setAmount] = useState<string>("");

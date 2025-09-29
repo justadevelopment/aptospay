@@ -7,6 +7,8 @@
         "@aptos-labs/ts-sdk": "^5.1.0",
         "@fontsource/inter": "^5.2.8",
         "@fontsource/jetbrains-mono": "^5.2.8",
+        "@fontsource/outfit": "^5.2.8",
+        "@fontsource/sora": "^5.2.8",
         "jwt-decode": "^4.0.0",
         "next": "15.5.4",
         "react": "19.1.0",
@@ -61,6 +63,10 @@
     "@fontsource/inter": ["@fontsource/inter@5.2.8", "", {}, "sha512-P6r5WnJoKiNVV+zvW2xM13gNdFhAEpQ9dQJHt3naLvfg+LkF2ldgSLiF4T41lf1SQCM9QmkqPTn4TH568IRagg=="],
 
     "@fontsource/jetbrains-mono": ["@fontsource/jetbrains-mono@5.2.8", "", {}, "sha512-6w8/SG4kqvIMu7xd7wt6x3idn1Qux3p9N62s6G3rfldOUYHpWcc2FKrqf+Vo44jRvqWj2oAtTHrZXEP23oSKwQ=="],
+
+    "@fontsource/outfit": ["@fontsource/outfit@5.2.8", "", {}, "sha512-rXC6g0MqD7cOBjht0bMqc43qM6lRqDLML9KXsmg9uykz0wLQhy8Z/ajrMG6iyoT3NJR+MYgU+OEHp7uHoTb+Yw=="],
+
+    "@fontsource/sora": ["@fontsource/sora@5.2.8", "", {}, "sha512-1G6iTXUx8rcCKzi3mjaTQ1DE8PQz0OmW3Qnku+64S+bqRr1o/gGeiw8fxIQhhBU9ZP8ZofIqai7o00DNOPnlDw=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 

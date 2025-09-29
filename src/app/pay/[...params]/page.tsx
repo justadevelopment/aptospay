@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { generateEphemeralKeyPair, storeEphemeralKeyPair, createGoogleAuthUrl } from "@/lib/keyless";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
+import "@fontsource/outfit/400.css";
+import "@fontsource/outfit/500.css";
+import "@fontsource/outfit/600.css";
 
 export default function PaymentClaimPage({
   params
@@ -80,13 +84,16 @@ export default function PaymentClaimPage({
     <div className="min-h-screen bg-white flex items-center justify-center px-6">
       <div className="max-w-md w-full">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-8">
-            <div className="w-10 h-10 bg-teal rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold">AP</span>
-            </div>
-            <span className="text-2xl font-semibold text-gunmetal">AptosPay</span>
-          </div>
+        <div className="flex items-center justify-center space-x-3 mb-8">
+          <Image
+            src="/aptospay.png"
+            alt="AptosPay Logo"
+            width={50}
+            height={50}
+            className="h-12 w-12"
+            priority
+          />
+          <span className="text-3xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
         </div>
 
         {/* Payment Card */}
@@ -167,8 +174,8 @@ export default function PaymentClaimPage({
 
           {/* Security Notice */}
           <p className="text-xs text-center text-gunmetal/50 mt-6">
-            Your account will be created using Aptos Keyless technology.
-            No seed phrases or wallet apps required.
+            your account will be created using aptos keyless technology.
+            no seed phrases or wallet apps required.
           </p>
         </div>
 

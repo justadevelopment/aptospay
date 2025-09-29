@@ -3,11 +3,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { getBalance } from "@/lib/aptos";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/outfit/400.css";
+import "@fontsource/outfit/500.css";
+import "@fontsource/outfit/600.css";
 
 export default function DashboardPage() {
   const [address, setAddress] = useState<string>("");
@@ -66,11 +70,16 @@ export default function DashboardPage() {
       <nav className="border-b border-lavender-web">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-teal rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">AP</span>
-              </div>
-              <span className="text-xl font-semibold text-gunmetal">AptosPay</span>
+            <Link href="/" className="flex items-center space-x-3">
+              <Image
+                src="/aptospay.png"
+                alt="AptosPay Logo"
+                width={45}
+                height={45}
+                className="h-10 w-10"
+                priority
+              />
+              <span className="text-2xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
             </Link>
 
             <button
@@ -89,8 +98,8 @@ export default function DashboardPage() {
       <main className="container mx-auto px-6 py-12 max-w-6xl">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-4xl font-bold text-gunmetal mb-3">Dashboard</h1>
-          <p className="text-lg text-gunmetal/60">Manage your AptosPay account</p>
+          <h1 className="text-4xl font-bold text-gunmetal mb-3">dashboard</h1>
+          <p className="text-lg text-gunmetal/60">manage your aptospay account</p>
         </div>
 
         {/* Main Grid */}

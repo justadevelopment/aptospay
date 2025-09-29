@@ -2,11 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { validateEmail, validatePaymentAmount, sanitizeInput } from "@/lib/validation";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
+import "@fontsource/outfit/400.css";
+import "@fontsource/outfit/500.css";
+import "@fontsource/outfit/600.css";
+import "@fontsource/outfit/700.css";
 
 export default function Home() {
   const [amount, setAmount] = useState("");
@@ -60,12 +65,17 @@ export default function Home() {
       {/* Clean Navigation */}
       <nav className="border-b border-lavender-web">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-teal rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">AP</span>
-            </div>
-            <span className="text-xl font-semibold text-gunmetal">AptosPay</span>
-          </div>
+          <Link href="/" className="flex items-center space-x-3">
+            <Image
+              src="/aptospay.png"
+              alt="AptosPay Logo"
+              width={45}
+              height={45}
+              className="h-10 w-10"
+              priority
+            />
+            <span className="text-2xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+          </Link>
 
           <div className="flex items-center space-x-6">
             <Link
@@ -259,7 +269,7 @@ export default function Home() {
         <section className="py-20">
           <div className="bg-lavender-web rounded-3xl p-12 text-center">
             <h3 className="text-2xl font-bold text-gunmetal mb-4">
-              Powered by Aptos Keyless Accounts
+              powered by aptos keyless accounts
             </h3>
             <p className="text-lg text-gunmetal/70 max-w-2xl mx-auto mb-8">
               No seed phrases. No browser extensions. Just sign in with Google and start transacting on the blockchain.
@@ -288,8 +298,15 @@ export default function Home() {
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <div className="w-6 h-6 bg-teal rounded-md"></div>
-              <span className="text-sm text-gunmetal/60">© 2025 AptosPay</span>
+              <Image
+                src="/aptospay.png"
+                alt="AptosPay Logo"
+                width={30}
+                height={30}
+                className="h-6 w-6 opacity-60"
+              />
+              <span className="text-sm font-medium text-gunmetal/60" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+              <span className="text-sm text-gunmetal/60">© 2025</span>
             </div>
 
             <div className="flex items-center space-x-6">
