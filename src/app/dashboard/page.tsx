@@ -70,16 +70,16 @@ export default function DashboardPage() {
       <nav className="border-b border-lavender-web">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/aptospay.png"
                 alt="AptosPay Logo"
-                width={40}
-                height={40}
-                className="h-10 w-10"
+                width={32}
+                height={32}
+                className="h-8 w-8"
                 priority
               />
-              <span className="text-2xl font-semibold text-gunmetal leading-none" style={{ fontFamily: "'Outfit', sans-serif", marginTop: "2px" }}>aptospay</span>
+              <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
             </Link>
 
             <button

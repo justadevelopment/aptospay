@@ -84,16 +84,16 @@ export default function PaymentClaimPage({
     <div className="min-h-screen bg-white flex items-center justify-center px-6">
       <div className="max-w-md w-full">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
+        <div className="flex items-center justify-center gap-2.5 mb-8">
           <Image
             src="/aptospay.png"
             alt="AptosPay Logo"
-            width={48}
-            height={48}
-            className="h-12 w-12"
+            width={40}
+            height={40}
+            className="h-10 w-10"
             priority
           />
-          <span className="text-3xl font-semibold text-gunmetal leading-none" style={{ fontFamily: "'Outfit', sans-serif", marginTop: "2px" }}>aptospay</span>
+          <span className="text-2xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
         </div>
 
         {/* Payment Card */}
