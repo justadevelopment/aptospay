@@ -5,8 +5,7 @@ import {
   Account,
   Ed25519PrivateKey,
   EphemeralKeyPair,
-  KeylessAccount,
-  ProofFetcher
+  KeylessAccount
 } from "@aptos-labs/ts-sdk";
 
 const APTOS_NETWORK = (process.env.NEXT_PUBLIC_APTOS_NETWORK || "testnet") as Network;
@@ -66,4 +65,4 @@ export async function transferAPT(
   return committedTransaction.hash;
 }
 
-export { Network, Account, EphemeralKeyPair, KeylessAccount, type ProofFetcher };
+export { Network, Account, EphemeralKeyPair, KeylessAccount };

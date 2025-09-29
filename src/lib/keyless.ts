@@ -1,4 +1,4 @@
-import { EphemeralKeyPair, KeylessAccount, ProofFetcher } from "@aptos-labs/ts-sdk";
+import { EphemeralKeyPair, KeylessAccount } from "@aptos-labs/ts-sdk";
 import { aptos } from "./aptos";
 import { jwtDecode } from "jwt-decode";
 
