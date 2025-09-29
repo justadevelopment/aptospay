@@ -1,26 +1,26 @@
 @import "tailwindcss";
 
-/* Color Palette */
+/* Root CSS Variables - Regular CSS custom properties */
 :root {
-  /* Primary Colors */
-  --gunmetal: #022b3a;
-  --teal: #1f7a8c;
-  --columbia-blue: #bfdbf7;
-  --lavender-web: #e1e5f2;
-  --white: #ffffff;
+  /* Primary Colors - Raw values */
+  --gunmetal-raw: #022b3a;
+  --teal-raw: #1f7a8c;
+  --columbia-blue-raw: #bfdbf7;
+  --lavender-web-raw: #e1e5f2;
+  --white-raw: #ffffff;
 
-  /* Semantic Colors */
-  --background: #ffffff;
-  --foreground: #022b3a;
-  --muted: #e1e5f2;
-  --muted-foreground: #1f7a8c;
-  --accent: #bfdbf7;
-  --border: #e1e5f2;
+  /* Semantic Colors - Raw values */
+  --background-raw: #ffffff;
+  --foreground-raw: #022b3a;
+  --muted-raw: #e1e5f2;
+  --muted-foreground-raw: #1f7a8c;
+  --accent-raw: #bfdbf7;
+  --border-raw: #e1e5f2;
 
-  /* Functional Colors */
-  --success: #10b981;
-  --error: #ef4444;
-  --warning: #f59e0b;
+  /* Functional Colors - Raw values */
+  --success-raw: #10b981;
+  --error-raw: #ef4444;
+  --warning-raw: #f59e0b;
 
   /* Typography */
   --font-display: "Inter", system-ui, -apple-system, sans-serif;
@@ -33,25 +33,51 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
 
-  /* Shadows */
+  /* Shadows - Using RGB values for Tailwind compatibility */
   --shadow-sm: 0 1px 2px 0 rgb(2 43 58 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(2 43 58 / 0.1), 0 2px 4px -2px rgb(2 43 58 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(2 43 58 / 0.1), 0 4px 6px -4px rgb(2 43 58 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(2 43 58 / 0.1), 0 8px 10px -6px rgb(2 43 58 / 0.1);
 }
 
-@theme inline {
-  --color-gunmetal: var(--gunmetal);
-  --color-teal: var(--teal);
-  --color-columbia-blue: var(--columbia-blue);
-  --color-lavender-web: var(--lavender-web);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-accent: var(--accent);
-  --color-border: var(--border);
-  --font-sans: var(--font-display);
-  --font-mono: var(--font-mono);
+/* Tailwind v4 Theme Configuration */
+@theme {
+  /* Custom Colors */
+  --color-gunmetal: #022b3a;
+  --color-teal: #1f7a8c;
+  --color-columbia-blue: #bfdbf7;
+  --color-lavender-web: #e1e5f2;
+
+  /* Semantic Colors */
+  --color-background: #ffffff;
+  --color-foreground: #022b3a;
+  --color-muted: #e1e5f2;
+  --color-accent: #bfdbf7;
+  --color-border: #e1e5f2;
+
+  /* Functional Colors */
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+
+  /* Font Families */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", monospace;
+
+  /* Custom Breakpoints */
+  --breakpoint-2xl: 1400px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(2 43 58 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(2 43 58 / 0.1), 0 2px 4px -2px rgb(2 43 58 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(2 43 58 / 0.1), 0 4px 6px -4px rgb(2 43 58 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(2 43 58 / 0.1), 0 8px 10px -6px rgb(2 43 58 / 0.1);
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
 }
 
 /* Base Styles */
@@ -68,9 +94,9 @@ html {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-body);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.6;
   min-height: 100vh;
@@ -78,9 +104,9 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-weight: 600;
-  color: var(--gunmetal);
+  color: var(--color-gunmetal);
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -105,24 +131,24 @@ h4 {
 
 /* Links */
 a {
-  color: var(--teal);
+  color: var(--color-teal);
   text-decoration: none;
   transition: color 0.15s ease;
 }
 
 a:hover {
-  color: var(--gunmetal);
+  color: var(--color-gunmetal);
 }
 
 /* Forms */
 input, textarea, select {
-  font-family: var(--font-body);
+  font-family: var(--font-sans);
   font-size: 1rem;
 }
 
 /* Buttons - Base Styles */
 button {
-  font-family: var(--font-body);
+  font-family: var(--font-sans);
   font-weight: 500;
   transition: all 0.15s ease;
   cursor: pointer;
@@ -146,29 +172,29 @@ button {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--lavender-web);
+  background: var(--color-lavender-web);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--teal);
+  background: var(--color-teal);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--gunmetal);
+  background: var(--color-gunmetal);
 }
 
 /* Focus Styles */
 :focus-visible {
-  outline: 2px solid var(--teal);
+  outline: 2px solid var(--color-teal);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
 
 /* Selection */
 ::selection {
-  background: var(--columbia-blue);
-  color: var(--gunmetal);
+  background: var(--color-columbia-blue);
+  color: var(--color-gunmetal);
 }
 
 /* Animations */
