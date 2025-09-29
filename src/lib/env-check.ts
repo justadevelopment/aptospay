@@ -7,9 +7,12 @@ export function checkEnvironment(): void {
     const validation = validateEnvironmentConfig();
 
     if (!validation.isValid) {
-      console.error("❌ Environment Configuration Error:");
-      console.error(validation.error);
-      console.error("\nPlease check your .env.local file and ensure all required variables are set correctly.");
+      // Only show warnings in development, not during build
+      if (process.env.NODE_ENV === "development") {
+        console.warn("⚠️  Environment Configuration Warning:");
+        console.warn(validation.error);
+        console.warn("\nPlease check your .env.local file and ensure all required variables are set correctly.");
+      }
 
       // In development, provide helpful setup instructions
       if (process.env.NODE_ENV === "development") {

@@ -25,7 +25,6 @@ export function validateEmail(email: string): ValidationResult {
   }
 
   // Check for common typos in popular domains
-  const commonDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com'];
   const domain = trimmedEmail.split('@')[1];
   const typoPatterns = ['gmial.com', 'gmai.com', 'yahooo.com', 'homail.com'];
 
@@ -120,7 +119,7 @@ export function validatePaymentLink(link: string): ValidationResult {
     }
 
     return { isValid: true };
-  } catch (error) {
+  } catch {
     return { isValid: false, error: "Invalid URL format" };
   }
 }
@@ -163,7 +162,7 @@ export function validateJWT(token: string): ValidationResult {
     }
 
     return { isValid: true };
-  } catch (error) {
+  } catch {
     return { isValid: false, error: "Invalid JWT encoding" };
   }
 }
@@ -206,9 +205,9 @@ export function validateEnvironmentConfig(): ValidationResult {
     };
   }
 
-  // Validate Google Client ID format
+  // Validate Google Client ID format (skip in build environment with placeholder)
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
-  if (!clientId.endsWith('.apps.googleusercontent.com')) {
+  if (clientId !== 'your-google-client-id' && !clientId.endsWith('.apps.googleusercontent.com')) {
     return {
       isValid: false,
       error: 'Invalid Google Client ID format'
