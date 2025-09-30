@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  aptosAddress    String    @unique @map("aptos_address")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  sentPayments    Payment[] @relation("SentPayments")
+  receivedPayments Payment[] @relation("ReceivedPayments")
+
+  @@map("users")
+}
+
+model Payment {
+  id              String    @id @default(cuid())
+  amount          Float
+  recipientEmail  String    @map("recipient_email")
+  senderAddress   String?   @map("sender_address")
+  recipientAddress String?  @map("recipient_address")
+  status          String    @default("pending") // pending, claimed, expired
+  transactionHash String?   @map("transaction_hash")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  claimedAt       DateTime? @map("claimed_at")
+
+  sender          User?     @relation("SentPayments", fields: [senderAddress], references: [aptosAddress])
+  recipient       User?     @relation("ReceivedPayments", fields: [recipientAddress], references: [aptosAddress])
+
+  @@index([recipientEmail])
+  @@index([senderAddress])
+  @@index([status])
+  @@map("payments")
+}
+
+model EmailMapping {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  aptosAddress  String   @map("aptos_address")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@map("email_mappings")
+}

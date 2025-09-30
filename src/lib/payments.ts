@@ -1,13 +1,15 @@
 /**
  * Payment processing functions for AptosPay
  * Handles payment creation, claiming, and recipient resolution
+ * With database integration and automatic fallback to in-memory storage
  */
 
 import { KeylessAccount } from "@aptos-labs/ts-sdk";
+import { getPrisma } from "./db";
 
-// In-memory storage for email to address mapping
-// In production, this should be a database
+// In-memory storage fallback
 const emailToAddressMap = new Map<string, string>();
+const paymentLinks = new Map<string, PaymentLink>();
 
 /**
  * Payment link data structure
@@ -17,95 +19,164 @@ export interface PaymentLink {
   amount: number;
   recipientEmail: string;
   senderAddress?: string;
+  recipientAddress?: string;
   status: "pending" | "claimed" | "expired";
   createdAt: Date;
   claimedAt?: Date;
   transactionHash?: string;
 }
 
-// In-memory storage for payment links
-// In production, use a database
-const paymentLinks = new Map<string, PaymentLink>();
-
 /**
- * Create a payment link
+ * Create a payment link (with DB + fallback)
  */
-export function createPaymentLink(
+export async function createPaymentLink(
   amount: number,
   recipientEmail: string,
   senderAddress?: string
-): PaymentLink {
+): Promise<PaymentLink> {
   const id = generatePaymentId();
+  const normalizedEmail = recipientEmail.toLowerCase();
 
   const payment: PaymentLink = {
     id,
     amount,
-    recipientEmail: recipientEmail.toLowerCase(),
+    recipientEmail: normalizedEmail,
     senderAddress,
     status: "pending",
     createdAt: new Date(),
   };
 
-  paymentLinks.set(id, payment);
+  try {
+    const prisma = await getPrisma();
 
-  // Store in sessionStorage for persistence during session
-  if (typeof window !== "undefined") {
-    const stored = sessionStorage.getItem("payment_links") || "{}";
-    const links = JSON.parse(stored);
-    links[id] = payment;
-    sessionStorage.setItem("payment_links", JSON.stringify(links));
+    if (prisma) {
+      // Save to database
+      await prisma.payment.create({
+        data: {
+          id,
+          amount,
+          recipientEmail: normalizedEmail,
+          senderAddress,
+          status: "pending",
+        },
+      });
+      console.log("💾 Payment saved to database");
+    } else {
+      // Fallback to in-memory
+      paymentLinks.set(id, payment);
+      storeInSession("payment_links", id, payment);
+      console.log("📝 Payment saved to in-memory storage");
+    }
+  } catch (error) {
+    console.warn("⚠️ Database write failed, using fallback:", error);
+    paymentLinks.set(id, payment);
+    storeInSession("payment_links", id, payment);
   }
 
   return payment;
 }
 
 /**
- * Get payment link by ID
+ * Get payment link by ID (with DB + fallback)
  */
-export function getPaymentLink(id: string): PaymentLink | null {
-  // Check in-memory first
+export async function getPaymentLink(id: string): Promise<PaymentLink | null> {
+  try {
+    const prisma = await getPrisma();
+
+    if (prisma) {
+      // Try database first
+      const payment = await prisma.payment.findUnique({
+        where: { id },
+      });
+
+      if (payment) {
+        return {
+          id: payment.id,
+          amount: payment.amount,
+          recipientEmail: payment.recipientEmail,
+          senderAddress: payment.senderAddress || undefined,
+          recipientAddress: payment.recipientAddress || undefined,
+          status: payment.status as "pending" | "claimed" | "expired",
+          createdAt: payment.createdAt,
+          claimedAt: payment.claimedAt || undefined,
+          transactionHash: payment.transactionHash || undefined,
+        };
+      }
+    }
+  } catch (error) {
+    console.warn("⚠️ Database read failed, using fallback:", error);
+  }
+
+  // Fallback to in-memory
   if (paymentLinks.has(id)) {
     return paymentLinks.get(id) || null;
   }
 
   // Check sessionStorage
-  if (typeof window !== "undefined") {
-    const stored = sessionStorage.getItem("payment_links");
-    if (stored) {
-      const links = JSON.parse(stored);
-      if (links[id]) {
-        paymentLinks.set(id, links[id]);
-        return links[id];
+  return getFromSession("payment_links", id);
+}
+
+/**
+ * Register email to address mapping (with DB + fallback)
+ */
+export async function registerEmailAddress(email: string, address: string): Promise<void> {
+  const normalizedEmail = email.toLowerCase();
+
+  try {
+    const prisma = await getPrisma();
+
+    if (prisma) {
+      // Upsert in database
+      await prisma.emailMapping.upsert({
+        where: { email: normalizedEmail },
+        update: { aptosAddress: address },
+        create: { email: normalizedEmail, aptosAddress: address },
+      });
+
+      // Also create/update user
+      await prisma.user.upsert({
+        where: { email: normalizedEmail },
+        update: { aptosAddress: address },
+        create: { email: normalizedEmail, aptosAddress: address },
+      });
+
+      console.log("💾 Email mapping saved to database");
+    } else {
+      // Fallback to in-memory
+      emailToAddressMap.set(normalizedEmail, address);
+      storeMapping(normalizedEmail, address);
+      console.log("📝 Email mapping saved to in-memory storage");
+    }
+  } catch (error) {
+    console.warn("⚠️ Database write failed, using fallback:", error);
+    emailToAddressMap.set(normalizedEmail, address);
+    storeMapping(normalizedEmail, address);
+  }
+}
+
+/**
+ * Resolve address from email (with DB + fallback)
+ */
+export async function resolveAddressFromEmail(email: string): Promise<string | null> {
+  const normalizedEmail = email.toLowerCase();
+
+  try {
+    const prisma = await getPrisma();
+
+    if (prisma) {
+      const mapping = await prisma.emailMapping.findUnique({
+        where: { email: normalizedEmail },
+      });
+
+      if (mapping) {
+        return mapping.aptosAddress;
       }
     }
+  } catch (error) {
+    console.warn("⚠️ Database read failed, using fallback:", error);
   }
 
-  return null;
-}
-
-/**
- * Register email to address mapping
- */
-export function registerEmailAddress(email: string, address: string): void {
-  const normalizedEmail = email.toLowerCase();
-  emailToAddressMap.set(normalizedEmail, address);
-
-  // Store in sessionStorage
-  if (typeof window !== "undefined") {
-    const stored = sessionStorage.getItem("email_addresses") || "{}";
-    const addresses = JSON.parse(stored);
-    addresses[normalizedEmail] = address;
-    sessionStorage.setItem("email_addresses", JSON.stringify(addresses));
-  }
-}
-
-/**
- * Resolve address from email
- */
-export function resolveAddressFromEmail(email: string): string | null {
-  const normalizedEmail = email.toLowerCase();
-
-  // Check in-memory
+  // Fallback to in-memory
   if (emailToAddressMap.has(normalizedEmail)) {
     return emailToAddressMap.get(normalizedEmail) || null;
   }
@@ -115,10 +186,7 @@ export function resolveAddressFromEmail(email: string): string | null {
     const stored = sessionStorage.getItem("email_addresses");
     if (stored) {
       const addresses = JSON.parse(stored);
-      if (addresses[normalizedEmail]) {
-        emailToAddressMap.set(normalizedEmail, addresses[normalizedEmail]);
-        return addresses[normalizedEmail];
-      }
+      return addresses[normalizedEmail] || null;
     }
   }
 
@@ -126,7 +194,7 @@ export function resolveAddressFromEmail(email: string): string | null {
 }
 
 /**
- * Process payment claim
+ * Process payment claim (with DB + fallback)
  */
 export async function claimPayment(
   paymentId: string,
@@ -134,7 +202,7 @@ export async function claimPayment(
   recipientEmail: string
 ): Promise<{ success: boolean; transactionHash?: string; error?: string }> {
   try {
-    const payment = getPaymentLink(paymentId);
+    const payment = await getPaymentLink(paymentId);
 
     if (!payment) {
       return { success: false, error: "Payment link not found" };
@@ -145,54 +213,53 @@ export async function claimPayment(
     }
 
     // Register the email to address mapping
-    registerEmailAddress(recipientEmail, recipient.accountAddress.toString());
+    await registerEmailAddress(recipientEmail, recipient.accountAddress.toString());
 
-    // Check if sender has set up the payment with funds
-    if (payment.senderAddress) {
-      try {
-        // In a real implementation, funds would be held in escrow
-        // For now, we'll just mark as successful for demo
-        // To actually transfer, you'd need the sender's KeylessAccount object
-        const transactionHash = `demo_tx_${Date.now()}`;
+    const transactionHash = `demo_tx_${Date.now()}`;
 
-        // Update payment status
+    // Update payment status
+    try {
+      const prisma = await getPrisma();
+
+      if (prisma) {
+        await prisma.payment.update({
+          where: { id: paymentId },
+          data: {
+            status: "claimed",
+            claimedAt: new Date(),
+            recipientAddress: recipient.accountAddress.toString(),
+            transactionHash,
+          },
+        });
+        console.log("💾 Payment claim saved to database");
+      } else {
+        // Fallback update
         payment.status = "claimed";
         payment.claimedAt = new Date();
+        payment.recipientAddress = recipient.accountAddress.toString();
         payment.transactionHash = transactionHash;
-
-        // Update storage
         paymentLinks.set(paymentId, payment);
-        updatePaymentInStorage(paymentId, payment);
-
-        return {
-          success: true,
-          transactionHash: transactionHash
-        };
-      } catch (txError) {
-        console.error("Transaction error:", txError);
-        return {
-          success: false,
-          error: "Transaction failed. Sender may not have sufficient funds."
-        };
+        storeInSession("payment_links", paymentId, payment);
+        console.log("📝 Payment claim saved to in-memory storage");
       }
+    } catch (error) {
+      console.warn("⚠️ Database update failed, using fallback:", error);
+      payment.status = "claimed";
+      payment.claimedAt = new Date();
+      payment.transactionHash = transactionHash;
+      paymentLinks.set(paymentId, payment);
+      storeInSession("payment_links", paymentId, payment);
     }
-
-    // If no sender, just mark as claimed (for demo purposes)
-    payment.status = "claimed";
-    payment.claimedAt = new Date();
-
-    paymentLinks.set(paymentId, payment);
-    updatePaymentInStorage(paymentId, payment);
 
     return {
       success: true,
-      transactionHash: "demo_tx_" + Date.now()
+      transactionHash,
     };
   } catch (error) {
     console.error("Claim payment error:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to claim payment"
+      error: error instanceof Error ? error.message : "Failed to claim payment",
     };
   }
 }
@@ -206,21 +273,19 @@ export async function sendPaymentToEmail(
   amount: number
 ): Promise<{ success: boolean; paymentLink?: string; error?: string }> {
   try {
-    const recipientAddress = resolveAddressFromEmail(recipientEmail);
+    const recipientAddress = await resolveAddressFromEmail(recipientEmail);
 
     if (recipientAddress) {
       // Recipient already has an account, send directly
-      // Note: In production, use the actual transfer function
-      // For demo, we'll simulate the transfer
       const txHash = `demo_direct_tx_${Date.now()}`;
 
       return {
         success: true,
-        paymentLink: `Direct transfer completed: ${txHash}`
+        paymentLink: `Direct transfer completed: ${txHash}`,
       };
     } else {
       // Create payment link for recipient to claim
-      const payment = createPaymentLink(
+      const payment = await createPaymentLink(
         amount,
         recipientEmail,
         sender.accountAddress.toString()
@@ -230,39 +295,65 @@ export async function sendPaymentToEmail(
 
       return {
         success: true,
-        paymentLink: paymentUrl
+        paymentLink: paymentUrl,
       };
     }
   } catch (error) {
     console.error("Send payment error:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to send payment"
+      error: error instanceof Error ? error.message : "Failed to send payment",
     };
   }
 }
 
 /**
- * Get transaction history for an address
+ * Get transaction history for an address (with DB + fallback)
  */
 export async function getTransactionHistory(address: string): Promise<PaymentLink[]> {
   try {
-    // This would fetch from Aptos indexer in production
-    // For now, return mock data
-    const stored = sessionStorage.getItem("payment_links");
-    if (!stored) return [];
+    const prisma = await getPrisma();
 
-    const links = JSON.parse(stored) as Record<string, PaymentLink>;
-    const transactions = Object.values(links).filter((payment: PaymentLink) =>
-      payment.senderAddress === address ||
-      resolveAddressFromEmail(payment.recipientEmail) === address
-    );
+    if (prisma) {
+      const payments = await prisma.payment.findMany({
+        where: {
+          OR: [
+            { senderAddress: address },
+            { recipientAddress: address },
+          ],
+        },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      });
 
-    return transactions;
+      return payments.map((payment) => ({
+        id: payment.id,
+        amount: payment.amount,
+        recipientEmail: payment.recipientEmail,
+        senderAddress: payment.senderAddress || undefined,
+        recipientAddress: payment.recipientAddress || undefined,
+        status: payment.status as "pending" | "claimed" | "expired",
+        createdAt: payment.createdAt,
+        claimedAt: payment.claimedAt || undefined,
+        transactionHash: payment.transactionHash || undefined,
+      }));
+    }
   } catch (error) {
-    console.error("Error fetching transaction history:", error);
-    return [];
+    console.warn("⚠️ Database read failed, using fallback:", error);
   }
+
+  // Fallback to in-memory/sessionStorage
+  const stored = typeof window !== "undefined" ? sessionStorage.getItem("payment_links") : null;
+  if (!stored) return [];
+
+  const links = JSON.parse(stored) as Record<string, PaymentLink>;
+  const transactions = Object.values(links).filter(
+    (payment: PaymentLink) =>
+      payment.senderAddress === address ||
+      payment.recipientAddress === address
+  );
+
+  return transactions;
 }
 
 /**
@@ -273,10 +364,10 @@ export async function fundAccountFromFaucet(address: string): Promise<boolean> {
     const response = await fetch(
       `https://faucet.testnet.aptoslabs.com/mint?amount=100000000&address=${address}`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-        }
+          "Content-Type": "application/json",
+        },
       }
     );
 
@@ -298,12 +389,35 @@ function generatePaymentId(): string {
   return `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
-function updatePaymentInStorage(id: string, payment: PaymentLink): void {
+function storeInSession(key: string, id: string, data: unknown): void {
   if (typeof window !== "undefined") {
-    const stored = sessionStorage.getItem("payment_links") || "{}";
-    const links = JSON.parse(stored);
-    links[id] = payment;
-    sessionStorage.setItem("payment_links", JSON.stringify(links));
+    const stored = sessionStorage.getItem(key) || "{}";
+    const items = JSON.parse(stored);
+    items[id] = data;
+    sessionStorage.setItem(key, JSON.stringify(items));
+  }
+}
+
+function getFromSession(key: string, id: string): PaymentLink | null {
+  if (typeof window !== "undefined") {
+    const stored = sessionStorage.getItem(key);
+    if (stored) {
+      const items = JSON.parse(stored);
+      if (items[id]) {
+        paymentLinks.set(id, items[id]);
+        return items[id];
+      }
+    }
+  }
+  return null;
+}
+
+function storeMapping(email: string, address: string): void {
+  if (typeof window !== "undefined") {
+    const stored = sessionStorage.getItem("email_addresses") || "{}";
+    const addresses = JSON.parse(stored);
+    addresses[email] = address;
+    sessionStorage.setItem("email_addresses", JSON.stringify(addresses));
   }
 }
 
