@@ -19,37 +19,69 @@ export default function Home() {
   const [paymentLink, setPaymentLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [errors, setErrors] = useState<{ amount?: string; recipient?: string }>({});
+  const [loading, setLoading] = useState(false);
 
-  const generatePaymentLink = () => {
+  const generatePaymentLink = async () => {
     // Reset errors
     setErrors({});
+    setLoading(true);
 
-    // Validate inputs
-    const amountValidation = validatePaymentAmount(amount);
-    const emailValidation = validateEmail(recipient);
+    try {
+      // Validate inputs
+      const amountValidation = validatePaymentAmount(amount);
+      const emailValidation = validateEmail(recipient);
 
-    const newErrors: { amount?: string; recipient?: string } = {};
+      const newErrors: { amount?: string; recipient?: string } = {};
 
-    if (!amountValidation.isValid) {
-      newErrors.amount = amountValidation.error;
+      if (!amountValidation.isValid) {
+        newErrors.amount = amountValidation.error;
+      }
+
+      if (!emailValidation.isValid) {
+        newErrors.recipient = emailValidation.error;
+      }
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        setLoading(false);
+        return;
+      }
+
+      // Sanitize inputs
+      const sanitizedAmount = sanitizeInput(amount);
+      const sanitizedRecipient = sanitizeInput(recipient).toLowerCase();
+
+      // Get sender address if logged in
+      const senderAddress = sessionStorage.getItem("aptos_address") || undefined;
+
+      // Create payment in database via API
+      const response = await fetch("/api/payments/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: sanitizedAmount,
+          recipientEmail: sanitizedRecipient,
+          senderAddress,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({ amount: data.error || "Failed to create payment" });
+        setLoading(false);
+        return;
+      }
+
+      setPaymentLink(data.paymentUrl);
+    } catch (error) {
+      console.error("Error creating payment:", error);
+      setErrors({ amount: "Failed to create payment link. Please try again." });
+    } finally {
+      setLoading(false);
     }
-
-    if (!emailValidation.isValid) {
-      newErrors.recipient = emailValidation.error;
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    // Sanitize inputs
-    const sanitizedAmount = sanitizeInput(amount);
-    const sanitizedRecipient = sanitizeInput(recipient).toLowerCase();
-
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const link = `${baseUrl}/pay/$${sanitizedAmount}/to/${sanitizedRecipient}`;
-    setPaymentLink(link);
   };
 
   const copyToClipboard = async () => {
@@ -170,10 +202,10 @@ export default function Home() {
               {/* Generate Button */}
               <button
                 onClick={generatePaymentLink}
-                disabled={!amount || !recipient}
+                disabled={!amount || !recipient || loading}
                 className="w-full py-4 bg-gunmetal text-white rounded-xl font-semibold text-lg hover:bg-gunmetal/90 disabled:bg-lavender-web disabled:text-gunmetal/30 transition-all transform hover:scale-[1.01] active:scale-[0.99]"
               >
-                Generate payment link
+                {loading ? "Creating..." : "Generate payment link"}
               </button>
             </div>
 

@@ -66,24 +66,49 @@ export default function AuthCallbackPage() {
         // Store the keyless account for session persistence
         storeKeylessAccount(keylessAccount);
 
-        // Register email to address mapping
-        if (decodedToken.email) {
-          registerEmailAddress(decodedToken.email, keylessAccount.accountAddress.toString());
-        }
+        // Store credentials needed for executing transactions
+        sessionStorage.setItem("aptos_address", keylessAccount.accountAddress.toString());
+        sessionStorage.setItem("user_email", decodedToken.email || "");
+        sessionStorage.setItem("jwt_token", idToken);
+        sessionStorage.setItem("ephemeral_keypair", JSON.stringify(ephemeralKeyPair));
 
         setStatus("Account created successfully!");
 
-        const paymentAmount = sessionStorage.getItem("payment_amount");
-        const paymentRecipient = sessionStorage.getItem("payment_recipient");
+        const paymentId = sessionStorage.getItem("payment_id");
 
-        sessionStorage.setItem("aptos_address", keylessAccount.accountAddress.toString());
-        sessionStorage.setItem("user_email", decodedToken.email || "");
+        if (paymentId && decodedToken.email) {
+          // This is a payment claim - register recipient via API
+          setStatus("Registering payment claim...");
 
-        if (paymentAmount && paymentRecipient) {
-          sessionStorage.removeItem("payment_amount");
-          sessionStorage.removeItem("payment_recipient");
-          router.push(`/claim/success?amount=${paymentAmount}&email=${paymentRecipient}`);
+          try {
+            const claimResponse = await fetch("/api/payments/claim", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                paymentId,
+                recipientEmail: decodedToken.email,
+                recipientAddress: keylessAccount.accountAddress.toString(),
+              }),
+            });
+
+            const claimData = await claimResponse.json();
+
+            if (!claimResponse.ok) {
+              throw new Error(claimData.error || "Failed to claim payment");
+            }
+
+            sessionStorage.removeItem("payment_id");
+
+            // Redirect to waiting page - payment is NOT complete yet!
+            router.push(`/claim/waiting?id=${paymentId}`);
+          } catch (claimError) {
+            console.error("Claim error:", claimError);
+            setError(claimError instanceof Error ? claimError.message : "Failed to claim payment");
+          }
         } else {
+          // Regular sign-in
           router.push("/dashboard");
         }
       } catch (err) {

@@ -18,8 +18,10 @@ export default function PaymentClaimPage({
 }) {
   const [amount, setAmount] = useState<string>("");
   const [recipient, setRecipient] = useState<string>("");
+  const [paymentId, setPaymentId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [redirecting, setRedirecting] = useState(false);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     const parseParams = async () => {
@@ -32,6 +34,16 @@ export default function PaymentClaimPage({
 
         setAmount(amountStr);
         setRecipient(recipientEmail);
+
+        // Get payment ID from query params
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get("id");
+
+        if (id) {
+          setPaymentId(id);
+        } else {
+          setError("Payment ID not found. This link may be invalid.");
+        }
       }
 
       setLoading(false);
@@ -41,13 +53,18 @@ export default function PaymentClaimPage({
   }, [params]);
 
   const handleClaimPayment = () => {
+    if (!paymentId) {
+      setError("Cannot claim payment without payment ID");
+      return;
+    }
+
     setRedirecting(true);
 
     const ephemeralKeyPair = generateEphemeralKeyPair();
     const nonce = storeEphemeralKeyPair(ephemeralKeyPair);
 
-    sessionStorage.setItem("payment_amount", amount);
-    sessionStorage.setItem("payment_recipient", recipient);
+    // Store payment ID (NOT amount) - amount comes from database
+    sessionStorage.setItem("payment_id", paymentId);
 
     const authUrl = createGoogleAuthUrl(nonce);
     window.location.href = authUrl;

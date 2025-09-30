@@ -12,27 +12,55 @@ import "@fontsource/outfit/500.css";
 import "@fontsource/outfit/600.css";
 
 function ClaimSuccessContent() {
-  const [amount, setAmount] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
+  const [payment, setPayment] = useState<{
+    amount: number;
+    recipientEmail: string;
+    transactionHash: string | null;
+  } | null>(null);
   const [address, setAddress] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
   const searchParams = useSearchParams();
   const router = useRouter();
+  const paymentId = searchParams.get("id");
 
   useEffect(() => {
-    const amountParam = searchParams.get("amount");
-    const emailParam = searchParams.get("email");
-    const storedAddress = sessionStorage.getItem("aptos_address");
-
-    if (!amountParam || !emailParam) {
+    if (!paymentId) {
       router.push("/");
       return;
     }
 
-    setAmount(amountParam);
-    setEmail(emailParam);
-    setAddress(storedAddress || "");
-  }, [searchParams, router]);
+    // Fetch REAL payment details from database
+    const fetchPayment = async () => {
+      try {
+        const response = await fetch(`/api/payments/${paymentId}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || "Payment not found");
+          setLoading(false);
+          return;
+        }
+
+        // Verify transaction actually completed
+        if (!data.transactionHash) {
+          router.push(`/claim/waiting?id=${paymentId}`);
+          return;
+        }
+
+        setPayment(data);
+        setAddress(sessionStorage.getItem("aptos_address") || "");
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching payment:", err);
+        setError("Failed to load payment details");
+        setLoading(false);
+      }
+    };
+
+    fetchPayment();
+  }, [paymentId, router]);
 
   const copyAddress = async () => {
     if (!address) return;
@@ -40,6 +68,36 @@ function ClaimSuccessContent() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-6">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-teal border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
+          <p className="text-gunmetal/60">Loading payment details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !payment) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-6">
+        <div className="max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gunmetal mb-3">Error</h1>
+          <p className="text-gunmetal/60 mb-6">{error || "Payment not found"}</p>
+          <Link href="/" className="inline-block px-6 py-3 bg-gunmetal text-white rounded-xl font-semibold hover:bg-gunmetal/90">
+            Return Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-6">
@@ -67,7 +125,7 @@ function ClaimSuccessContent() {
           </h1>
 
           <p className="text-gunmetal/60">
-            You&apos;ve successfully claimed <span className="font-semibold text-gunmetal">${amount}</span>
+            You&apos;ve successfully claimed <span className="font-semibold text-gunmetal">${payment.amount}</span>
           </p>
         </div>
 
@@ -77,8 +135,23 @@ function ClaimSuccessContent() {
             {/* Email */}
             <div>
               <p className="text-sm text-gunmetal/60 mb-1">Account Email</p>
-              <p className="text-lg font-medium text-gunmetal">{email}</p>
+              <p className="text-lg font-medium text-gunmetal">{payment.recipientEmail}</p>
             </div>
+
+            {/* Transaction Hash */}
+            {payment.transactionHash && (
+              <div>
+                <p className="text-sm text-gunmetal/60 mb-2">Transaction Hash</p>
+                <a
+                  href={`https://explorer.aptoslabs.com/txn/${payment.transactionHash}?network=testnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-teal hover:underline font-mono text-sm break-all"
+                >
+                  {payment.transactionHash.slice(0, 16)}...{payment.transactionHash.slice(-8)}
+                </a>
+              </div>
+            )}
 
             {/* Wallet Address */}
             {address && (
