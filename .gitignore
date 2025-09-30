@@ -20,6 +20,22 @@
 # production
 /build
 
+# project planning
+project.md
+CLAUDE.md
+docs.md
+docs/
+notes.md
+notes/
+.claude/
+fieldguide.md
+*.md
+.cursor/
+contracts-deprecated/
+deck/
+script.md
+demo.md
+
 # misc
 .DS_Store
 *.pem
