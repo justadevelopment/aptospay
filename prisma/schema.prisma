@@ -29,8 +29,9 @@ model Payment {
   recipientEmail  String    @map("recipient_email")
   senderAddress   String?   @map("sender_address")
   recipientAddress String?  @map("recipient_address")
-  status          String    @default("pending") // pending, claimed, expired
+  status          String    @default("pending") // pending, claimed, expired, failed
   transactionHash String?   @map("transaction_hash")
+  errorMessage    String?   @map("error_message")
   createdAt       DateTime  @default(now()) @map("created_at")
   claimedAt       DateTime? @map("claimed_at")
 

@@ -1,93 +1,83 @@
 /**
- * Database client with automatic fallback to in-memory storage
- * Gracefully handles database unavailability
+ * Database client - PRODUCTION READY
+ * Database is REQUIRED for operation - no fallbacks
  */
 
 import { PrismaClient } from "@prisma/client";
 
 let prisma: PrismaClient | null = null;
-let dbAvailable = false;
-let dbCheckPromise: Promise<boolean> | null = null;
+let initPromise: Promise<PrismaClient> | null = null;
 
 /**
- * Initialize Prisma client with connection test
+ * Initialize and get Prisma client
+ * Throws error if database is not available
  */
-async function initializePrisma(): Promise<boolean> {
-  if (dbCheckPromise) {
-    return dbCheckPromise;
+export async function getPrisma(): Promise<PrismaClient> {
+  // Return existing client if available
+  if (prisma) {
+    return prisma;
   }
 
-  dbCheckPromise = (async () => {
+  // Return existing initialization promise if in progress
+  if (initPromise) {
+    return initPromise;
+  }
+
+  // Initialize new client
+  initPromise = (async () => {
+    if (!process.env.DATABASE_URL) {
+      throw new Error(
+        "DATABASE_URL environment variable is required. " +
+        "Please configure your PostgreSQL database connection."
+      );
+    }
+
+    const client = new PrismaClient({
+      log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+    });
+
     try {
-      if (!process.env.DATABASE_URL) {
-        console.warn("⚠️ DATABASE_URL not set - using in-memory storage");
-        return false;
-      }
-
-      prisma = new PrismaClient({
-        log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-      });
-
-      // Test connection with a simple query
-      await prisma.$connect();
-      await prisma.$queryRaw`SELECT 1`;
+      // Test connection
+      await client.$connect();
+      await client.$queryRaw`SELECT 1`;
 
       console.log("✅ Database connected successfully");
-      dbAvailable = true;
-      return true;
+      prisma = client;
+      return client;
     } catch (error) {
-      console.warn("⚠️ Database unavailable, falling back to in-memory storage:", error);
-      prisma = null;
-      dbAvailable = false;
-      return false;
+      console.error("❌ Database connection failed:", error);
+      throw new Error(
+        "Failed to connect to database. Please check your DATABASE_URL and ensure " +
+        "the PostgreSQL server is running and accessible."
+      );
     }
   })();
 
-  return dbCheckPromise;
+  return initPromise;
 }
 
 /**
- * Get Prisma client (initializes on first call)
- */
-export async function getPrisma(): Promise<PrismaClient | null> {
-  if (!dbAvailable && !dbCheckPromise) {
-    await initializePrisma();
-  }
-
-  return prisma;
-}
-
-/**
- * Check if database is available
- */
-export async function isDatabaseAvailable(): Promise<boolean> {
-  if (!dbCheckPromise) {
-    await initializePrisma();
-  }
-  return dbAvailable;
-}
-
-/**
- * Disconnect from database
+ * Disconnect from database (for cleanup)
  */
 export async function disconnectDatabase(): Promise<void> {
   if (prisma) {
     await prisma.$disconnect();
     prisma = null;
-    dbAvailable = false;
+    initPromise = null;
   }
-}
-
-// Auto-initialize on import (non-blocking)
-if (typeof window === "undefined") {
-  initializePrisma().catch(() => {
-    // Silently fail, fallback will be used
-  });
 }
 
 // Cleanup on process exit
 if (typeof process !== "undefined") {
   process.on("beforeExit", () => {
     disconnectDatabase().catch(console.error);
+  });
+
+  process.on("SIGINT", () => {
+    disconnectDatabase().then(() => process.exit(0)).catch(() => process.exit(1));
+  });
+
+  process.on("SIGTERM", () => {
+    disconnectDatabase().then(() => process.exit(0)).catch(() => process.exit(1));
   });
 }
