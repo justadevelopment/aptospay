@@ -4,7 +4,6 @@
  */
 
 import { KeylessAccount } from "@aptos-labs/ts-sdk";
-import { aptos } from "./aptos";
 
 // In-memory storage for email to address mapping
 // In production, this should be a database
@@ -246,15 +245,15 @@ export async function sendPaymentToEmail(
 /**
  * Get transaction history for an address
  */
-export async function getTransactionHistory(address: string): Promise<any[]> {
+export async function getTransactionHistory(address: string): Promise<PaymentLink[]> {
   try {
     // This would fetch from Aptos indexer in production
     // For now, return mock data
     const stored = sessionStorage.getItem("payment_links");
     if (!stored) return [];
 
-    const links = JSON.parse(stored);
-    const transactions = Object.values(links).filter((payment: any) =>
+    const links = JSON.parse(stored) as Record<string, PaymentLink>;
+    const transactions = Object.values(links).filter((payment: PaymentLink) =>
       payment.senderAddress === address ||
       resolveAddressFromEmail(payment.recipientEmail) === address
     );
