@@ -6,6 +6,7 @@ import Image from "next/image";
 import { jwtDecode } from "jwt-decode";
 import { getEphemeralKeyPair, deriveKeylessAccount, storeKeylessAccount } from "@/lib/keyless";
 import { validateJWT, validateNonce } from "@/lib/validation";
+import { registerEmailAddress } from "@/lib/payments";
 import "@fontsource/outfit/400.css";
 import "@fontsource/outfit/500.css";
 import "@fontsource/outfit/600.css";
@@ -64,6 +65,11 @@ export default function AuthCallbackPage() {
 
         // Store the keyless account for session persistence
         storeKeylessAccount(keylessAccount);
+
+        // Register email to address mapping
+        if (decodedToken.email) {
+          registerEmailAddress(decodedToken.email, keylessAccount.accountAddress.toString());
+        }
 
         setStatus("Account created successfully!");
 
