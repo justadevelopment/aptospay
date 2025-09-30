@@ -112,10 +112,11 @@ export async function deriveKeylessAccount(
 
 export function createGoogleAuthUrl(nonce: string): string {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
+  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI ||
+    `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`;
 
-  if (!clientId || !redirectUri) {
-    throw new Error("Google OAuth configuration is missing");
+  if (!clientId) {
+    throw new Error("Google OAuth Client ID is missing. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID");
   }
 
   const params = new URLSearchParams({
@@ -128,4 +129,19 @@ export function createGoogleAuthUrl(nonce: string): string {
   });
 
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
+
+// Store KeylessAccount for session persistence
+export function storeKeylessAccount(account: KeylessAccount): void {
+  if (typeof window === "undefined") return;
+
+  // Store account address for quick access
+  sessionStorage.setItem("aptos_keyless_account", account.accountAddress.toString());
+}
+
+// Retrieve stored KeylessAccount address
+export function getStoredKeylessAccount(): string | null {
+  if (typeof window === "undefined") return null;
+
+  return sessionStorage.getItem("aptos_keyless_account");
 }

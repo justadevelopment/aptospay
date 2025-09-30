@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { getEphemeralKeyPair, deriveKeylessAccount } from "@/lib/keyless";
+import { jwtDecode } from "jwt-decode";
+import { getEphemeralKeyPair, deriveKeylessAccount, storeKeylessAccount } from "@/lib/keyless";
 import { validateJWT, validateNonce } from "@/lib/validation";
 import "@fontsource/outfit/400.css";
 import "@fontsource/outfit/500.css";
@@ -31,7 +32,14 @@ export default function AuthCallbackPage() {
           throw new Error(`Invalid JWT: ${jwtValidation.error}`);
         }
 
-        const decodedToken = JSON.parse(atob(idToken.split(".")[1]));
+        // Decode JWT properly
+        const decodedToken = jwtDecode<{
+          nonce: string;
+          email?: string;
+          sub: string;
+          aud: string;
+          iss: string;
+        }>(idToken);
         const nonce = decodedToken.nonce;
 
         if (!nonce) {
@@ -53,6 +61,9 @@ export default function AuthCallbackPage() {
 
         setStatus("Creating Aptos account...");
         const keylessAccount = await deriveKeylessAccount(idToken, ephemeralKeyPair);
+
+        // Store the keyless account for session persistence
+        storeKeylessAccount(keylessAccount);
 
         setStatus("Account created successfully!");
 
