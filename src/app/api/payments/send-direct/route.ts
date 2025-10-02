@@ -1,21 +1,30 @@
 /**
  * API Route: Send Direct Transfer
- * Directly transfer APT to an address without payment link flow
+ * Directly transfer APT or USDC to an address without payment link flow
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { aptos, transferAPT } from "@/lib/aptos";
+import { transfer, getBalance } from "@/lib/aptos";
+import { TokenSymbol } from "@/lib/tokens";
 import { EphemeralKeyPair } from "@aptos-labs/ts-sdk";
 import { deriveKeylessAccount } from "@/lib/keyless";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { amount, recipientAddress, jwt, ephemeralKeyPairStr } = body;
+    const { amount, recipientAddress, jwt, ephemeralKeyPairStr, token = 'APT' } = body;
 
     if (!amount || !recipientAddress || !jwt || !ephemeralKeyPairStr) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Validate token
+    if (token !== 'APT' && token !== 'USDC') {
+      return NextResponse.json(
+        { error: "Invalid token. Must be APT or USDC" },
         { status: 400 }
       );
     }
@@ -35,31 +44,12 @@ export async function POST(request: NextRequest) {
     const senderAccount = await deriveKeylessAccount(jwt, ephemeralKeyPair);
 
     // Check sender balance
-    const senderResources = await aptos.getAccountResources({
-      accountAddress: senderAccount.accountAddress,
-    });
-
-    const aptCoinStore = senderResources.find(
-      (r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
-    );
-
-    if (!aptCoinStore || !("data" in aptCoinStore)) {
-      return NextResponse.json(
-        { error: "Sender account has no APT balance" },
-        { status: 400 }
-      );
-    }
-
-    const senderBalance =
-      parseInt((aptCoinStore.data as { coin: { value: string } }).coin.value) /
-      100000000;
+    const senderBalance = await getBalance(senderAccount.accountAddress.toString(), token as TokenSymbol);
 
     if (senderBalance < amount) {
       return NextResponse.json(
         {
-          error: `Insufficient balance. You have ${senderBalance.toFixed(
-            4
-          )} APT but need ${amount} APT`,
+          error: `Insufficient balance. You have ${senderBalance.toFixed(6)} ${token} but need ${amount} ${token}`,
         },
         { status: 400 }
       );
@@ -67,13 +57,14 @@ export async function POST(request: NextRequest) {
 
     // Execute transfer
     console.log(
-      `🔥 DIRECT TRANSFER: ${amount} APT from ${senderAccount.accountAddress} to ${recipientAddress}`
+      `🔥 DIRECT TRANSFER: ${amount} ${token} from ${senderAccount.accountAddress} to ${recipientAddress}`
     );
 
-    const transactionHash = await transferAPT(
+    const transactionHash = await transfer(
       senderAccount,
       recipientAddress,
-      amount
+      amount,
+      token as TokenSymbol
     );
 
     console.log(`✅ Transfer successful! Hash: ${transactionHash}`);
@@ -82,6 +73,7 @@ export async function POST(request: NextRequest) {
       success: true,
       transactionHash,
       amount,
+      token,
       recipientAddress,
     });
   } catch (error) {

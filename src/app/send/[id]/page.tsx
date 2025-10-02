@@ -182,7 +182,7 @@ export default function SendPaymentPage({
           </div>
           <h1 className="text-2xl font-bold text-gunmetal mb-3">Waiting for Recipient</h1>
           <p className="text-gunmetal/60 mb-6">
-            The recipient hasn't claimed this payment yet. Send them the payment link to continue.
+            The recipient hasn&apos;t claimed this payment yet. Send them the payment link to continue.
           </p>
           <Link href="/dashboard" className="inline-block px-6 py-3 bg-gunmetal text-white rounded-xl font-semibold hover:bg-gunmetal/90">
             Go to Dashboard

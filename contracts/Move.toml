@@ -1,0 +1,18 @@
+[package]
+name = "AptosPay"
+version = "1.0.0"
+authors = []
+license = "MIT"
+
+[addresses]
+aptospay = "_"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-framework"
+
+[dev-addresses]
+aptospay = "0xCAFE"
+
+[dev-dependencies]

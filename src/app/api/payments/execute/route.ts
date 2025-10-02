@@ -1,20 +1,21 @@
 /**
  * API Route: Execute Payment Transfer
- * REAL APT TRANSFER - requires sender's KeylessAccount
+ * REAL TRANSFER - supports APT and USDC - requires sender's KeylessAccount
  * This is the ONLY place where actual blockchain transactions happen
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { getPrisma } from "@/lib/db";
-import { aptos, transferAPT } from "@/lib/aptos";
-import { KeylessAccount, EphemeralKeyPair } from "@aptos-labs/ts-sdk";
+import { transfer, getBalance } from "@/lib/aptos";
+import { TokenSymbol } from "@/lib/tokens";
+import { EphemeralKeyPair } from "@aptos-labs/ts-sdk";
 import { deriveKeylessAccount } from "@/lib/keyless";
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { paymentId, jwt, ephemeralKeyPairStr } = body;
+  const body = await request.json();
+  const { paymentId, jwt, ephemeralKeyPairStr } = body;
 
+  try {
     if (!paymentId || !jwt || !ephemeralKeyPairStr) {
       return NextResponse.json(
         { error: "Missing required fields: paymentId, jwt, ephemeralKeyPairStr" },
@@ -58,7 +59,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Reconstruct sender's KeylessAccount from JWT
-    const ephemeralKeyPair = EphemeralKeyPair.fromJSON(ephemeralKeyPairStr);
+    const ephemeralKeyPair = EphemeralKeyPair.fromBytes(
+      Uint8Array.from(JSON.parse(ephemeralKeyPairStr).data)
+    );
     const senderAccount = await deriveKeylessAccount(jwt, ephemeralKeyPair);
 
     // Verify sender address matches
@@ -69,40 +72,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const token = (payment.token as TokenSymbol) || 'APT';
+
     // Check sender balance
-    const senderResources = await aptos.getAccountResources({
-      accountAddress: senderAccount.accountAddress,
-    });
-
-    const aptCoinStore = senderResources.find(
-      (r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
-    );
-
-    if (!aptCoinStore || !("data" in aptCoinStore)) {
-      return NextResponse.json(
-        { error: "Sender account has no APT balance" },
-        { status: 400 }
-      );
-    }
-
-    const senderBalance = parseInt((aptCoinStore.data as { coin: { value: string } }).coin.value) / 100000000;
+    const senderBalance = await getBalance(senderAccount.accountAddress.toString(), token);
 
     if (senderBalance < payment.amount) {
       return NextResponse.json(
         {
-          error: `Insufficient balance. You have ${senderBalance.toFixed(4)} APT but need ${payment.amount} APT`,
+          error: `Insufficient balance. You have ${senderBalance.toFixed(6)} ${token} but need ${payment.amount} ${token}`,
         },
         { status: 400 }
       );
     }
 
-    // Execute REAL APT transfer on blockchain
-    console.log(`🔥 EXECUTING REAL TRANSACTION: ${payment.amount} APT from ${senderAccount.accountAddress} to ${payment.recipientAddress}`);
+    // Execute REAL transfer on blockchain
+    console.log(`🔥 EXECUTING REAL TRANSACTION: ${payment.amount} ${token} from ${senderAccount.accountAddress} to ${payment.recipientAddress}`);
 
-    const transactionHash = await transferAPT(
+    const transactionHash = await transfer(
       senderAccount,
       payment.recipientAddress,
-      payment.amount
+      payment.amount,
+      token
     );
 
     console.log(`✅ TRANSACTION SUCCESSFUL: ${transactionHash}`);

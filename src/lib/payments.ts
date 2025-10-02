@@ -5,7 +5,8 @@
 
 import { KeylessAccount } from "@aptos-labs/ts-sdk";
 import { getPrisma } from "./db";
-import { aptos, transferAPT } from "./aptos";
+import { aptos, transfer, getBalance } from "./aptos";
+import { TokenSymbol } from "./tokens";
 
 // In-memory storage ONLY for session caching (DB is primary)
 const paymentLinksCache = new Map<string, PaymentLink>();
@@ -19,6 +20,7 @@ export interface PaymentLink {
   recipientEmail: string;
   senderAddress?: string;
   recipientAddress?: string;
+  token?: TokenSymbol;
   status: "pending" | "claimed" | "expired" | "failed";
   createdAt: Date;
   claimedAt?: Date;
@@ -32,7 +34,8 @@ export interface PaymentLink {
 export async function createPaymentLink(
   amount: number,
   recipientEmail: string,
-  senderAddress?: string
+  senderAddress?: string,
+  token: TokenSymbol = 'APT'
 ): Promise<PaymentLink> {
   const prisma = await getPrisma();
 
@@ -49,6 +52,7 @@ export async function createPaymentLink(
       amount,
       recipientEmail: normalizedEmail,
       senderAddress,
+      token,
       status: "pending",
     },
   });
@@ -58,6 +62,7 @@ export async function createPaymentLink(
     amount: payment.amount,
     recipientEmail: payment.recipientEmail,
     senderAddress: payment.senderAddress || undefined,
+    token: (payment.token as TokenSymbol) || 'APT',
     status: payment.status as "pending" | "claimed" | "expired" | "failed",
     createdAt: payment.createdAt,
   };
@@ -95,6 +100,7 @@ export async function getPaymentLink(id: string): Promise<PaymentLink | null> {
     recipientEmail: payment.recipientEmail,
     senderAddress: payment.senderAddress || undefined,
     recipientAddress: payment.recipientAddress || undefined,
+    token: (payment.token as TokenSymbol) || 'APT',
     status: payment.status as "pending" | "claimed" | "expired" | "failed",
     createdAt: payment.createdAt,
     claimedAt: payment.claimedAt || undefined,
@@ -240,7 +246,7 @@ export async function claimPayment(
 }
 
 /**
- * Execute REAL APT transfer from sender to recipient
+ * Execute REAL transfer from sender to recipient (supports APT and USDC)
  */
 export async function executePaymentTransfer(
   senderAccount: KeylessAccount,
@@ -267,13 +273,16 @@ export async function executePaymentTransfer(
       return { success: false, error: "Payment already transferred" };
     }
 
-    // Execute REAL transaction
-    console.log(`Executing real APT transfer: ${payment.amount} APT from ${senderAccount.accountAddress} to ${payment.recipientAddress}`);
+    const token = (payment.token as TokenSymbol) || 'APT';
 
-    const transactionHash = await transferAPT(
+    // Execute REAL transaction
+    console.log(`Executing real ${token} transfer: ${payment.amount} ${token} from ${senderAccount.accountAddress} to ${payment.recipientAddress}`);
+
+    const transactionHash = await transfer(
       senderAccount,
       payment.recipientAddress,
-      payment.amount
+      payment.amount,
+      token
     );
 
     // Update database with real transaction hash
@@ -313,7 +322,8 @@ export async function executePaymentTransfer(
 export async function sendPaymentToEmail(
   senderAccount: KeylessAccount,
   recipientEmail: string,
-  amount: number
+  amount: number,
+  token: TokenSymbol = 'APT'
 ): Promise<{ success: boolean; paymentLink?: string; transactionHash?: string; error?: string }> {
   try {
     // Validate amount
@@ -322,24 +332,12 @@ export async function sendPaymentToEmail(
     }
 
     // Check sender balance
-    const senderResources = await aptos.getAccountResources({
-      accountAddress: senderAccount.accountAddress,
-    });
-
-    const aptCoinStore = senderResources.find(
-      (r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
-    );
-
-    if (!aptCoinStore || !("data" in aptCoinStore)) {
-      return { success: false, error: "Sender account has no APT balance" };
-    }
-
-    const senderBalance = parseInt((aptCoinStore.data as { coin: { value: string } }).coin.value) / 100000000;
+    const senderBalance = await getBalance(senderAccount.accountAddress.toString(), token);
 
     if (senderBalance < amount) {
       return {
         success: false,
-        error: `Insufficient balance. You have ${senderBalance.toFixed(4)} APT but need ${amount} APT`
+        error: `Insufficient balance. You have ${senderBalance.toFixed(6)} ${token} but need ${amount} ${token}`
       };
     }
 
@@ -347,12 +345,13 @@ export async function sendPaymentToEmail(
 
     if (recipientAddress) {
       // Recipient already has account - transfer directly
-      console.log(`Executing direct APT transfer: ${amount} APT to ${recipientAddress}`);
+      console.log(`Executing direct ${token} transfer: ${amount} ${token} to ${recipientAddress}`);
 
-      const transactionHash = await transferAPT(
+      const transactionHash = await transfer(
         senderAccount,
         recipientAddress,
-        amount
+        amount,
+        token
       );
 
       // Record in database
@@ -365,6 +364,7 @@ export async function sendPaymentToEmail(
             recipientEmail: recipientEmail.toLowerCase(),
             senderAddress: senderAccount.accountAddress.toString(),
             recipientAddress,
+            token,
             status: "claimed",
             transactionHash,
             claimedAt: new Date(),
@@ -381,7 +381,8 @@ export async function sendPaymentToEmail(
       const payment = await createPaymentLink(
         amount,
         recipientEmail,
-        senderAccount.accountAddress.toString()
+        senderAccount.accountAddress.toString(),
+        token
       );
 
       const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL}/pay/$${amount}/to/${recipientEmail}?id=${payment.id}`;
@@ -427,6 +428,7 @@ export async function getTransactionHistory(address: string): Promise<PaymentLin
     recipientEmail: payment.recipientEmail,
     senderAddress: payment.senderAddress || undefined,
     recipientAddress: payment.recipientAddress || undefined,
+    token: (payment.token as TokenSymbol) || 'APT',
     status: payment.status as "pending" | "claimed" | "expired" | "failed",
     createdAt: payment.createdAt,
     claimedAt: payment.claimedAt || undefined,

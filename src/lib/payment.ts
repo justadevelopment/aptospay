@@ -1,5 +1,6 @@
 import { Account, KeylessAccount } from "@aptos-labs/ts-sdk";
-import { transferAPT } from "./aptos";
+import { transfer } from "./aptos";
+import { TokenSymbol } from "./tokens";
 import type { PaymentLink, PaymentRequest } from "@/types";
 
 export async function createPaymentLink(request: PaymentRequest): Promise<PaymentLink> {
@@ -21,10 +22,11 @@ export async function createPaymentLink(request: PaymentRequest): Promise<Paymen
 export async function processPayment(
   sender: Account | KeylessAccount,
   recipientAddress: string,
-  amount: number
+  amount: number,
+  token: TokenSymbol = 'APT'
 ): Promise<string> {
   try {
-    const txHash = await transferAPT(sender, recipientAddress, amount);
+    const txHash = await transfer(sender, recipientAddress, amount, token);
     return txHash;
   } catch (error) {
     console.error("Payment processing error:", error);

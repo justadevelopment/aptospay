@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { validateEmail, validatePaymentAmount, sanitizeInput } from "@/lib/validation";
+import { validatePaymentAmount, sanitizeInput } from "@/lib/validation";
 import { generateEphemeralKeyPair, storeEphemeralKeyPair, createGoogleAuthUrl } from "@/lib/keyless";
+import { TokenSymbol, getSupportedTokens } from "@/lib/tokens";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -18,6 +19,7 @@ import "@fontsource/outfit/700.css";
 export default function Home() {
   const [amount, setAmount] = useState("");
   const [recipient, setRecipient] = useState("");
+  const [token, setToken] = useState<TokenSymbol>("APT");
   const [paymentLink, setPaymentLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [errors, setErrors] = useState<{ amount?: string; recipient?: string }>({});
@@ -26,7 +28,6 @@ export default function Home() {
   const [userAddress, setUserAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
-  const [fundingAccount, setFundingAccount] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState(false);
   const router = useRouter();
 
@@ -81,37 +82,6 @@ export default function Home() {
     router.refresh();
   };
 
-  const handleFundAccount = async () => {
-    if (!userAddress) return;
-
-    setFundingAccount(true);
-    try {
-      const response = await fetch(
-        `https://faucet.testnet.aptoslabs.com/mint?amount=100000000&address=${userAddress}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        // Wait a moment for transaction to process
-        setTimeout(() => {
-          fetchBalance(userAddress);
-          alert("✅ Successfully funded! You received 1 APT from the testnet faucet.");
-        }, 2000);
-      } else {
-        alert("❌ Faucet request failed. You may need to wait before requesting again.");
-      }
-    } catch (error) {
-      console.error("Faucet error:", error);
-      alert("❌ Failed to fund account. Please try again later.");
-    } finally {
-      setFundingAccount(false);
-    }
-  };
 
   const generatePaymentLink = async () => {
     // Check if user is signed in
@@ -229,6 +199,13 @@ export default function Home() {
                   Dashboard
                 </Link>
 
+                <Link
+                  href="/transactions"
+                  className="text-gunmetal hover:text-teal transition-colors font-medium"
+                >
+                  Transactions
+                </Link>
+
                 {/* Balance Display */}
                 <div className="px-4 py-2 bg-teal/10 border-2 border-teal/20 rounded-lg">
                   <div className="flex items-center space-x-2">
@@ -288,26 +265,31 @@ export default function Home() {
         <section className="py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
             {/* Left - Receive Component */}
-            <div>
-              <div className="bg-gradient-to-br from-white to-lavender-web/20 border border-lavender-web rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+            <div className="perspective-1000">
+              <div className="bg-white border border-lavender-web/30 rounded-2xl p-5 h-full flex flex-col relative overflow-hidden transform-style-3d transition-all duration-500 hover:shadow-[0_20px_60px_0_rgba(16,39,112,0.15)] shadow-[0_12px_35px_0_rgba(16,39,112,0.07)]">
+                <div className="absolute inset-0 bg-gradient-to-br from-teal/5 via-transparent to-lavender-web/10 opacity-60"></div>
+                <div className="relative z-10">
                 <h3 className="text-xs font-semibold text-gunmetal mb-4 uppercase tracking-wide">Receive</h3>
 
                 {userEmail && userAddress ? (
                   <div className="space-y-3 flex-1 flex flex-col">
                     {/* Balance Display */}
-                    <div className="p-2 bg-teal/5 rounded-lg border border-teal/20">
-                      <p className="text-[9px] text-gunmetal/60 mb-0.5 uppercase tracking-wide">Balance</p>
-                      {loadingBalance ? (
-                        <div className="w-20 h-5 bg-lavender-web animate-pulse rounded"></div>
-                      ) : (
-                        <p className="text-xl font-bold text-teal">
-                          {balance !== null ? `${balance.toFixed(4)} APT` : "-.-- APT"}
-                        </p>
-                      )}
+                    <div className="p-2 bg-gradient-to-br from-teal/10 to-teal/5 rounded-lg border border-teal/30 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-teal/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                      <div className="relative">
+                        <p className="text-[9px] text-gunmetal/60 mb-0.5 uppercase tracking-wide">Balance</p>
+                        {loadingBalance ? (
+                          <div className="w-20 h-5 bg-lavender-web animate-pulse rounded"></div>
+                        ) : (
+                          <p className="text-xl font-bold text-teal">
+                            {balance !== null ? `${balance.toFixed(4)} APT` : "-.-- APT"}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Wallet Address */}
-                    <div className="p-2 bg-gunmetal/5 rounded-lg border border-gunmetal/10">
+                    <div className="p-2 bg-gradient-to-br from-gunmetal/10 to-gunmetal/5 rounded-lg border border-gunmetal/20 relative overflow-hidden group">
                       <p className="text-[9px] text-gunmetal/60 mb-1 uppercase tracking-wide">Your Address</p>
                       <div className="group relative">
                         <code className="block px-2 py-1.5 bg-white rounded text-[10px] font-mono text-gunmetal break-all">
@@ -436,23 +418,46 @@ export default function Home() {
                     </button>
                   </div>
                 )}
+                </div>
               </div>
             </div>
 
             {/* Right - Send Component */}
-            <div>
-          <div className="bg-gradient-to-br from-white to-lavender-web/20 border border-lavender-web rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+            <div className="perspective-1000">
+          <div className="bg-white border border-lavender-web/30 rounded-2xl p-5 h-full flex flex-col relative overflow-hidden transform-style-3d transition-all duration-500 hover:shadow-[0_20px_60px_0_rgba(16,39,112,0.15)] shadow-[0_12px_35px_0_rgba(16,39,112,0.07)]">
+            <div className="absolute inset-0 bg-gradient-to-br from-columbia-blue/5 via-transparent to-teal/10 opacity-60"></div>
+            <div className="relative z-10">
             <h3 className="text-xs font-semibold text-gunmetal mb-4 uppercase tracking-wide">Send</h3>
             <div className="space-y-3 flex-1 flex flex-col">
+              {/* Token Selector */}
+              <div>
+                <label className="block text-[9px] font-semibold text-gunmetal mb-1 uppercase tracking-wide">
+                  Token
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {getSupportedTokens().map((tokenSymbol) => (
+                    <button
+                      key={tokenSymbol}
+                      type="button"
+                      onClick={() => setToken(tokenSymbol)}
+                      className={`py-1.5 px-3 rounded-lg font-semibold text-xs transition-all ${
+                        token === tokenSymbol
+                          ? "bg-gunmetal text-white"
+                          : "bg-white border-2 border-lavender-web text-gunmetal hover:bg-lavender-web/30"
+                      }`}
+                    >
+                      {tokenSymbol}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Amount Input */}
               <div>
                 <label className="block text-[9px] font-semibold text-gunmetal mb-1 uppercase tracking-wide">
                   Amount
                 </label>
                 <div className="relative">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gunmetal/50 font-medium text-xs">
-                    $
-                  </span>
                   <input
                     type="number"
                     value={amount}
@@ -461,15 +466,18 @@ export default function Home() {
                       if (errors.amount) setErrors({ ...errors, amount: undefined });
                     }}
                     placeholder="0.00"
-                    step="0.01"
-                    min="0.01"
+                    step={token === 'USDC' ? "0.000001" : "0.00000001"}
+                    min="0.000001"
                     max="1000000"
-                    className={`w-full pl-7 pr-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-colors ${
+                    className={`w-full pl-3 pr-12 py-2 text-sm border-2 rounded-lg focus:outline-none transition-colors ${
                       errors.amount
                         ? 'border-red-400 focus:border-red-500'
                         : 'border-lavender-web focus:border-teal'
                     }`}
                   />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gunmetal/50 font-medium text-xs">
+                    {token}
+                  </span>
                 </div>
                 {errors.amount && (
                   <p className="text-red-500 text-[9px] mt-0.5">{errors.amount}</p>
@@ -541,32 +549,49 @@ export default function Home() {
                       return;
                     }
 
-                    if (isAddress) {
-                      // Direct transfer to address
-                      const response = await fetch("/api/payments/send-direct", {
+                    let recipientAddr = recipient.trim();
+
+                    // If email, resolve to address
+                    if (isEmail) {
+                      const resolveResponse = await fetch("/api/resolve-email", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          amount: parseFloat(amount),
-                          recipientAddress: recipient.trim(),
-                          jwt,
-                          ephemeralKeyPairStr,
-                        }),
+                        body: JSON.stringify({ email: recipient.trim() }),
                       });
 
-                      const data = await response.json();
+                      const resolveData = await resolveResponse.json();
 
-                      if (!response.ok) {
-                        throw new Error(data.error || "Transfer failed");
+                      if (!resolveResponse.ok) {
+                        setErrors({ recipient: resolveData.error });
+                        setLoading(false);
+                        return;
                       }
 
-                      alert(`✅ Sent ${amount} APT! Transaction: ${data.transactionHash}`);
-                      setAmount("");
-                      setRecipient("");
-                    } else {
-                      // Email - need to resolve address first (TODO)
-                      setErrors({ recipient: "Email sending coming soon. Use address for now." });
+                      recipientAddr = resolveData.aptosAddress;
                     }
+
+                    // Direct transfer to address
+                    const response = await fetch("/api/payments/send-direct", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        amount: parseFloat(amount),
+                        recipientAddress: recipientAddr,
+                        token,
+                        jwt,
+                        ephemeralKeyPairStr,
+                      }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                      throw new Error(data.error || "Transfer failed");
+                    }
+
+                    alert(`✅ Sent ${amount} ${token} to ${isEmail ? recipient.trim() : 'address'}! Transaction: ${data.transactionHash}`);
+                    setAmount("");
+                    setRecipient("");
                   } catch (error) {
                     console.error("Send error:", error);
                     setErrors({ amount: error instanceof Error ? error.message : "Failed to send" });
@@ -581,17 +606,35 @@ export default function Home() {
               </button>
 
               {/* Hero Text in Send Card */}
-              <div className="flex-1 flex items-center justify-center text-center pt-4 border-t border-lavender-web mt-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gunmetal mb-2 leading-tight">
+              <div className="flex-1 flex items-center justify-center text-center pt-4 border-t border-lavender-web/50 mt-4 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-teal/5 to-transparent rounded-b-2xl"></div>
+
+                {/* Animated Waves */}
+                <div className="absolute bottom-0 left-0 w-full">
+                  <svg className="waves" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shapeRendering="auto">
+                    <defs>
+                      <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
+                    </defs>
+                    <g className="parallax">
+                      <use xlinkHref="#gentle-wave" x="48" y="0" fill="rgba(31,122,140,0.1)" />
+                      <use xlinkHref="#gentle-wave" x="48" y="3" fill="rgba(31,122,140,0.15)" />
+                      <use xlinkHref="#gentle-wave" x="48" y="5" fill="rgba(31,122,140,0.2)" />
+                      <use xlinkHref="#gentle-wave" x="48" y="7" fill="rgba(31,122,140,0.25)" />
+                    </g>
+                  </svg>
+                </div>
+
+                <div className="relative z-10">
+                  <h2 className="text-2xl font-bold text-gunmetal mb-2 leading-tight animate-fadeIn">
                     Send money to anyone,<br />
-                    <span className="text-teal">just sign in with Google</span>
+                    <span className="text-teal">by email</span>
                   </h2>
                   <p className="text-xs text-gunmetal/70 leading-relaxed">
                     Direct transfers to addresses or payment links via email
                   </p>
                 </div>
               </div>
+            </div>
             </div>
 
             {/* Generated Link */}

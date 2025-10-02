@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { getBalance } from "@/lib/aptos";
+import { formatAmount } from "@/lib/tokens";
 import TransactionHistory from "@/components/TransactionHistory";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
@@ -17,7 +18,8 @@ import "@fontsource/outfit/600.css";
 export default function DashboardPage() {
   const [address, setAddress] = useState<string>("");
   const [email, setEmail] = useState<string>("");
-  const [balance, setBalance] = useState<number>(0);
+  const [aptBalance, setAptBalance] = useState<number>(0);
+  const [usdcBalance, setUsdcBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const router = useRouter();
@@ -36,10 +38,15 @@ export default function DashboardPage() {
       setEmail(storedEmail || "");
 
       try {
-        const accountBalance = await getBalance(storedAddress);
-        setBalance(accountBalance);
+        // Fetch both APT and USDC balances in parallel
+        const [apt, usdc] = await Promise.all([
+          getBalance(storedAddress, 'APT'),
+          getBalance(storedAddress, 'USDC')
+        ]);
+        setAptBalance(apt);
+        setUsdcBalance(usdc);
       } catch (error) {
-        console.error("Error fetching balance:", error);
+        console.error("Error fetching balances:", error);
       } finally {
         setLoading(false);
       }
@@ -109,33 +116,55 @@ export default function DashboardPage() {
           <div className="lg:col-span-2">
             <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gunmetal">Balance</h2>
+                <h2 className="text-xl font-semibold text-gunmetal">Balances</h2>
                 <span className="px-3 py-1 bg-green-50 text-green-600 text-sm font-medium rounded-full">
                   Active
                 </span>
               </div>
 
-              <div className="mb-8">
-                <p className="text-sm text-gunmetal/60 mb-2">Available Balance</p>
-                <div className="flex items-baseline">
-                  <span className="text-5xl font-bold text-gunmetal">${balance.toFixed(2)}</span>
-                  <span className="ml-2 text-xl text-gunmetal/40">USD</span>
+              <div className="mb-8 space-y-6">
+                {/* APT Balance */}
+                <div>
+                  <p className="text-sm text-gunmetal/60 mb-2">APT Balance</p>
+                  <div className="flex items-baseline">
+                    <span className="text-4xl font-bold text-gunmetal">{formatAmount(aptBalance, 'APT')}</span>
+                  </div>
+                </div>
+
+                {/* USDC Balance */}
+                <div className="pt-4 border-t border-lavender-web">
+                  <p className="text-sm text-gunmetal/60 mb-2">USDC Balance</p>
+                  <div className="flex items-baseline">
+                    <span className="text-4xl font-bold text-gunmetal">{formatAmount(usdcBalance, 'USDC')}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-4 gap-4">
                 <Link
                   href="/"
                   className="py-3 px-6 bg-gunmetal text-white text-center rounded-xl font-semibold hover:bg-gunmetal/90 transition-all transform hover:scale-[1.01] active:scale-[0.99]"
                 >
                   Send Payment
                 </Link>
-                <button
-                  className="py-3 px-6 bg-white border-2 border-lavender-web text-gunmetal rounded-xl font-semibold hover:bg-lavender-web/30 transition-all"
-                  disabled
+                <Link
+                  href="/escrow"
+                  className="py-3 px-6 bg-teal text-white text-center rounded-xl font-semibold hover:bg-teal/90 transition-all transform hover:scale-[1.01] active:scale-[0.99]"
                 >
-                  Request Payment
-                </button>
+                  Escrow
+                </Link>
+                <Link
+                  href="/merchant"
+                  className="py-3 px-6 bg-columbia-blue text-gunmetal text-center rounded-xl font-semibold hover:bg-columbia-blue/80 transition-all transform hover:scale-[1.01] active:scale-[0.99]"
+                >
+                  Merchant QR
+                </Link>
+                <Link
+                  href="/scan"
+                  className="py-3 px-6 bg-white border-2 border-lavender-web text-gunmetal text-center rounded-xl font-semibold hover:bg-lavender-web/30 transition-all transform hover:scale-[1.01] active:scale-[0.99]"
+                >
+                  Scan QR
+                </Link>
               </div>
             </div>
           </div>

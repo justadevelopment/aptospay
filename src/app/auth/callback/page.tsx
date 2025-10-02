@@ -6,7 +6,6 @@ import Image from "next/image";
 import { jwtDecode } from "jwt-decode";
 import { getEphemeralKeyPair, deriveKeylessAccount, storeKeylessAccount } from "@/lib/keyless";
 import { validateJWT, validateNonce } from "@/lib/validation";
-import { registerEmailAddress } from "@/lib/payments";
 import "@fontsource/outfit/400.css";
 import "@fontsource/outfit/500.css";
 import "@fontsource/outfit/600.css";
@@ -73,6 +72,25 @@ export default function AuthCallbackPage() {
         sessionStorage.setItem("ephemeral_keypair", JSON.stringify(ephemeralKeyPair));
 
         setStatus("Account created successfully!");
+
+        // Register user in database (always, for email-to-address mapping)
+        if (decodedToken.email) {
+          try {
+            await fetch("/api/register-user", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: decodedToken.email,
+                aptosAddress: keylessAccount.accountAddress.toString(),
+              }),
+            });
+          } catch (registerError) {
+            console.error("User registration error:", registerError);
+            // Don't block flow if registration fails
+          }
+        }
 
         const paymentId = sessionStorage.getItem("payment_id");
 
