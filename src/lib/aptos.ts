@@ -31,22 +31,18 @@ export async function getBalance(address: string, token: TokenSymbol = 'APT'): P
       });
       return fromUnits(balance, 'APT');
     } else if (token === 'USDC') {
-      // Get USDC balance from fungible asset store
-      const resources = await aptos.getAccountResources({
-        accountAddress: address,
+      // Get USDC balance using primary_fungible_store::balance view function
+      const usdcConfig = TOKENS.USDC;
+      const result = await aptos.view({
+        payload: {
+          function: '0x1::primary_fungible_store::balance',
+          typeArguments: ['0x1::fungible_asset::Metadata'],
+          functionArguments: [address, usdcConfig.address],
+        },
       });
 
-      // Look for primary fungible store
-      const fungibleStore = resources.find(
-        (r) => r.type === '0x1::primary_fungible_store::PrimaryStore'
-      );
-
-      if (fungibleStore && "data" in fungibleStore) {
-        const data = fungibleStore.data as { balance: string };
-        return fromUnits(parseInt(data.balance), 'USDC');
-      }
-
-      return 0;
+      const balance = result[0] as string;
+      return fromUnits(parseInt(balance), 'USDC');
     }
 
     return 0;
@@ -344,7 +340,7 @@ export async function getEscrowStats(): Promise<EscrowStats | null> {
  * This requires indexing events since Move doesn't support iteration
  * For now, returns empty array - will be implemented with event indexing
  */
-export async function getUserEscrows(userAddress: string): Promise<EscrowDetails[]> {
+export async function getUserEscrows(_userAddress: string): Promise<EscrowDetails[]> {
   // TODO: Implement event indexing to fetch user's escrows
   // This would require:
   // 1. Querying EscrowCreatedEvent events

@@ -10,7 +10,9 @@ export interface StoredEphemeralKeyPair {
 }
 
 export function generateEphemeralKeyPair(): EphemeralKeyPair {
-  return EphemeralKeyPair.generate();
+  // Set expiry to 30 days from now (extended from default 2 weeks to reduce logouts)
+  const expiryDateSecs = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60);
+  return EphemeralKeyPair.generate({ expiryDateSecs });
 }
 
 export function storeEphemeralKeyPair(

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { validatePaymentAmount, sanitizeInput } from "@/lib/validation";
 import { generateEphemeralKeyPair, storeEphemeralKeyPair, createGoogleAuthUrl } from "@/lib/keyless";
 import { TokenSymbol, getSupportedTokens } from "@/lib/tokens";
+import { getBalance } from "@/lib/aptos";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -40,25 +41,21 @@ export default function Home() {
       setUserEmail(email);
       setUserAddress(address);
       fetchBalance(address);
+
+      // Auto-refresh balance every 10 seconds
+      const intervalId = setInterval(() => {
+        fetchBalance(address);
+      }, 10000);
+
+      return () => clearInterval(intervalId);
     }
   }, []);
 
   const fetchBalance = async (address: string) => {
     setLoadingBalance(true);
     try {
-      const response = await fetch(`https://fullnode.testnet.aptoslabs.com/v1/accounts/${address}/resources`);
-      const resources = await response.json();
-
-      const aptCoinStore = resources.find(
-        (r: { type: string }) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
-      );
-
-      if (aptCoinStore && aptCoinStore.data) {
-        const balanceValue = parseInt(aptCoinStore.data.coin.value) / 100000000;
-        setBalance(balanceValue);
-      } else {
-        setBalance(0);
-      }
+      const aptBalance = await getBalance(address, 'APT');
+      setBalance(aptBalance);
     } catch (error) {
       console.error("Error fetching balance:", error);
       setBalance(0);
@@ -265,7 +262,7 @@ export default function Home() {
         <section className="py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
             {/* Left - Receive Component */}
-            <div className="perspective-1000">
+            <div id="receive" className="perspective-1000">
               <div className="bg-white border border-lavender-web/30 rounded-2xl p-5 h-full flex flex-col relative overflow-hidden transform-style-3d transition-all duration-500 hover:shadow-[0_20px_60px_0_rgba(16,39,112,0.15)] shadow-[0_12px_35px_0_rgba(16,39,112,0.07)]">
                 <div className="absolute inset-0 bg-gradient-to-br from-teal/5 via-transparent to-lavender-web/10 opacity-60"></div>
                 <div className="relative z-10">
@@ -389,13 +386,31 @@ export default function Home() {
                         )}
                       </div>
 
-                      <button
-                        onClick={generatePaymentLink}
-                        disabled={!amount || !recipient || loading}
-                        className="w-full py-2.5 bg-gunmetal text-white rounded-lg font-semibold text-xs hover:bg-gunmetal/90 disabled:bg-lavender-web disabled:text-gunmetal/30 transition-all mt-auto"
-                      >
-                        {loading ? "Creating..." : "Generate payment link"}
-                      </button>
+                      <div className="grid grid-cols-2 gap-2 mt-auto">
+                        <button
+                          onClick={generatePaymentLink}
+                          disabled={!amount || !recipient || loading}
+                          className="py-2.5 bg-gunmetal text-white rounded-lg font-semibold text-xs hover:bg-gunmetal/90 disabled:bg-lavender-web disabled:text-gunmetal/30 transition-all flex items-center justify-center space-x-1"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                          </svg>
+                          <span>{loading ? "Creating..." : "Generate Link"}</span>
+                        </button>
+                        <button
+                          onClick={async () => {
+                            // TODO: Implement QR code generation
+                            alert("QR code generation coming soon!");
+                          }}
+                          disabled={!amount || !recipient || loading}
+                          className="py-2.5 bg-teal text-white rounded-lg font-semibold text-xs hover:bg-teal/90 disabled:bg-lavender-web disabled:text-gunmetal/30 transition-all flex items-center justify-center space-x-1"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                          </svg>
+                          <span>Generate QR</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -423,7 +438,7 @@ export default function Home() {
             </div>
 
             {/* Right - Send Component */}
-            <div className="perspective-1000">
+            <div id="send" className="perspective-1000">
           <div className="bg-white border border-lavender-web/30 rounded-2xl p-5 h-full flex flex-col relative overflow-hidden transform-style-3d transition-all duration-500 hover:shadow-[0_20px_60px_0_rgba(16,39,112,0.15)] shadow-[0_12px_35px_0_rgba(16,39,112,0.07)]">
             <div className="absolute inset-0 bg-gradient-to-br from-columbia-blue/5 via-transparent to-teal/10 opacity-60"></div>
             <div className="relative z-10">

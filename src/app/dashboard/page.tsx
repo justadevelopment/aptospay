@@ -66,7 +66,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-teal border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
-          <p className="text-gunmetal/60">Loading dashboard...</p>
+          <p className="text-gunmetal/60">Loading Dashboard...</p>
         </div>
       </div>
     );
@@ -106,14 +106,15 @@ export default function DashboardPage() {
       <main className="container mx-auto px-6 py-12 max-w-6xl">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-4xl font-bold text-gunmetal mb-3">dashboard</h1>
-          <p className="text-lg text-gunmetal/60">manage your aptospay account</p>
+          <h1 className="text-4xl font-bold text-gunmetal mb-3">Dashboard</h1>
+          <p className="text-lg text-gunmetal/60">Manage your account</p>
         </div>
 
         {/* Main Grid */}
         <div className="grid lg:grid-cols-3 gap-8 mb-12">
           {/* Balance Card */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Balances */}
             <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gunmetal">Balances</h2>
@@ -122,48 +123,105 @@ export default function DashboardPage() {
                 </span>
               </div>
 
-              <div className="mb-8 space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
                 {/* APT Balance */}
-                <div>
-                  <p className="text-sm text-gunmetal/60 mb-2">APT Balance</p>
-                  <div className="flex items-baseline">
-                    <span className="text-4xl font-bold text-gunmetal">{formatAmount(aptBalance, 'APT')}</span>
+                <div className="p-6 bg-gradient-to-br from-teal/10 to-teal/5 rounded-xl border-2 border-teal/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm text-gunmetal/60">APT Balance</p>
+                    <svg className="w-8 h-8 text-teal opacity-50" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
                   </div>
+                  <span className="text-3xl font-bold text-gunmetal">{formatAmount(aptBalance, 'APT')}</span>
                 </div>
 
                 {/* USDC Balance */}
-                <div className="pt-4 border-t border-lavender-web">
-                  <p className="text-sm text-gunmetal/60 mb-2">USDC Balance</p>
-                  <div className="flex items-baseline">
-                    <span className="text-4xl font-bold text-gunmetal">{formatAmount(usdcBalance, 'USDC')}</span>
+                <div className="p-6 bg-gradient-to-br from-columbia-blue/10 to-columbia-blue/5 rounded-xl border-2 border-columbia-blue/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm text-gunmetal/60">USDC Balance</p>
+                    <svg className="w-8 h-8 text-columbia-blue opacity-50" fill="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10"/>
+                    </svg>
                   </div>
+                  <span className="text-3xl font-bold text-gunmetal">{formatAmount(usdcBalance, 'USDC')}</span>
                 </div>
               </div>
+            </div>
 
-              <div className="grid md:grid-cols-4 gap-4">
+            {/* Quick Actions */}
+            <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
+              <h2 className="text-xl font-semibold text-gunmetal mb-6">Quick Actions</h2>
+              <div className="grid md:grid-cols-2 gap-4">
                 <Link
-                  href="/"
-                  className="py-3 px-6 bg-gunmetal text-white text-center rounded-xl font-semibold hover:bg-gunmetal/90 transition-all transform hover:scale-[1.01] active:scale-[0.99]"
+                  href="/#send"
+                  className="group p-6 bg-gradient-to-br from-gunmetal to-gunmetal/90 text-white rounded-xl hover:shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  Send Payment
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="p-3 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                    </div>
+                    <svg className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-1">Send Payment</h3>
+                  <p className="text-sm text-white/70">Send APT or USDC to anyone</p>
                 </Link>
+
+                <Link
+                  href="/#receive"
+                  className="group p-6 bg-gradient-to-br from-teal to-teal/90 text-white rounded-xl hover:shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="p-3 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </div>
+                    <svg className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-1">Request Payment</h3>
+                  <p className="text-sm text-white/70">Generate payment link or QR</p>
+                </Link>
+
                 <Link
                   href="/escrow"
-                  className="py-3 px-6 bg-teal text-white text-center rounded-xl font-semibold hover:bg-teal/90 transition-all transform hover:scale-[1.01] active:scale-[0.99]"
+                  className="group p-6 bg-gradient-to-br from-columbia-blue/80 to-columbia-blue/70 text-gunmetal rounded-xl hover:shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] border-2 border-columbia-blue"
                 >
-                  Escrow
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="p-3 bg-white/40 rounded-lg group-hover:bg-white/60 transition-colors">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
+                    <svg className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-1">Escrow Payment</h3>
+                  <p className="text-sm text-gunmetal/70">Secure conditional payments</p>
                 </Link>
-                <Link
-                  href="/merchant"
-                  className="py-3 px-6 bg-columbia-blue text-gunmetal text-center rounded-xl font-semibold hover:bg-columbia-blue/80 transition-all transform hover:scale-[1.01] active:scale-[0.99]"
-                >
-                  Merchant QR
-                </Link>
+
                 <Link
                   href="/scan"
-                  className="py-3 px-6 bg-white border-2 border-lavender-web text-gunmetal text-center rounded-xl font-semibold hover:bg-lavender-web/30 transition-all transform hover:scale-[1.01] active:scale-[0.99]"
+                  className="group p-6 bg-white border-2 border-lavender-web text-gunmetal rounded-xl hover:bg-lavender-web/30 hover:shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  Scan QR
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="p-3 bg-lavender-web rounded-lg group-hover:bg-lavender-web/80 transition-colors">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                      </svg>
+                    </div>
+                    <svg className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-1">Scan QR Code</h3>
+                  <p className="text-sm text-gunmetal/60">Pay with QR code scanner</p>
                 </Link>
               </div>
             </div>
