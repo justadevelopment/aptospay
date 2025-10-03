@@ -231,13 +231,7 @@ bun run build
 | Auth | Google OAuth (Keyless) |
 | Runtime | Bun |
 
-## Documentation
 
-- `CLAUDE.md` - Project instructions and development notes
-- `docs.md` - DeFi research and implementation details
-- `submissionanddeployment.md` - Security audit and deployment readiness
-- `script.md` - Demo script for presentation
-- `script11.md` - Narration script for voice generation
 
 ## Resources
 
