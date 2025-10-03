@@ -20,7 +20,8 @@ import "@fontsource/outfit/700.css";
 export default function Home() {
   const [amount, setAmount] = useState("");
   const [recipient, setRecipient] = useState("");
-  const [token, setToken] = useState<TokenSymbol>("APT");
+  const [receiveToken, setReceiveToken] = useState<TokenSymbol>("APT"); // For Receive section
+  const [sendToken, setSendToken] = useState<TokenSymbol>("APT"); // For Send section
   const [paymentLink, setPaymentLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [errors, setErrors] = useState<{ amount?: string; recipient?: string }>({});
@@ -206,9 +207,13 @@ export default function Home() {
                 {/* Balance Display */}
                 <div className="px-4 py-2 bg-teal/10 border-2 border-teal/20 rounded-lg">
                   <div className="flex items-center space-x-2">
-                    <svg className="w-5 h-5 text-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <Image
+                      src="/aptos-apt-logo.svg"
+                      alt="APT"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
                     {loadingBalance ? (
                       <div className="w-12 h-4 bg-teal/20 animate-pulse rounded"></div>
                     ) : (
@@ -274,7 +279,16 @@ export default function Home() {
                     <div className="p-2 bg-gradient-to-br from-teal/10 to-teal/5 rounded-lg border border-teal/30 relative overflow-hidden group">
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-teal/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                       <div className="relative">
-                        <p className="text-[9px] text-gunmetal/60 mb-0.5 uppercase tracking-wide">Balance</p>
+                        <div className="flex items-center justify-between mb-0.5">
+                          <p className="text-[9px] text-gunmetal/60 uppercase tracking-wide">Balance</p>
+                          <Image
+                            src="/aptos-apt-logo.svg"
+                            alt="APT"
+                            width={16}
+                            height={16}
+                            className="w-4 h-4 opacity-50"
+                          />
+                        </div>
                         {loadingBalance ? (
                           <div className="w-20 h-5 bg-lavender-web animate-pulse rounded"></div>
                         ) : (
@@ -331,15 +345,35 @@ export default function Home() {
                     <div className="pt-2 border-t border-lavender-web flex-1 flex flex-col">
                       <p className="text-[10px] font-semibold text-gunmetal/60 mb-2 uppercase tracking-wide">Request Payment</p>
 
+                      {/* Token Selector */}
+                      <div className="mb-2">
+                        <label className="block text-[9px] font-semibold text-gunmetal mb-1 uppercase tracking-wide">
+                          Token
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {getSupportedTokens().map((tokenSymbol) => (
+                            <button
+                              key={tokenSymbol}
+                              type="button"
+                              onClick={() => setReceiveToken(tokenSymbol)}
+                              className={`py-1.5 px-3 rounded-lg font-semibold text-xs transition-all ${
+                                receiveToken === tokenSymbol
+                                  ? "bg-teal text-white"
+                                  : "bg-white border-2 border-lavender-web text-gunmetal hover:bg-lavender-web/30"
+                              }`}
+                            >
+                              {tokenSymbol}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       {/* Amount Input */}
                       <div className="mb-2">
                         <label className="block text-[9px] font-semibold text-gunmetal mb-1 uppercase tracking-wide">
                           Amount
                         </label>
                         <div className="relative">
-                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gunmetal/50 font-medium text-xs">
-                            $
-                          </span>
                           <input
                             type="number"
                             value={amount}
@@ -348,14 +382,18 @@ export default function Home() {
                               if (errors.amount) setErrors({ ...errors, amount: undefined });
                             }}
                             placeholder="0.00"
-                            step="0.01"
-                            min="0.01"
-                            className={`w-full pl-7 pr-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-colors ${
+                            step={receiveToken === 'USDC' ? "0.000001" : "0.00000001"}
+                            min="0.000001"
+                            max="1000000"
+                            className={`w-full pl-3 pr-12 py-2 text-sm border-2 rounded-lg focus:outline-none transition-colors ${
                               errors.amount
                                 ? 'border-red-400 focus:border-red-500'
                                 : 'border-lavender-web focus:border-teal'
                             }`}
                           />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gunmetal/50 font-medium text-xs">
+                            {receiveToken}
+                          </span>
                         </div>
                         {errors.amount && (
                           <p className="text-red-500 text-[9px] mt-0.5">{errors.amount}</p>
@@ -454,9 +492,9 @@ export default function Home() {
                     <button
                       key={tokenSymbol}
                       type="button"
-                      onClick={() => setToken(tokenSymbol)}
+                      onClick={() => setSendToken(tokenSymbol)}
                       className={`py-1.5 px-3 rounded-lg font-semibold text-xs transition-all ${
-                        token === tokenSymbol
+                        sendToken === tokenSymbol
                           ? "bg-gunmetal text-white"
                           : "bg-white border-2 border-lavender-web text-gunmetal hover:bg-lavender-web/30"
                       }`}
@@ -481,7 +519,7 @@ export default function Home() {
                       if (errors.amount) setErrors({ ...errors, amount: undefined });
                     }}
                     placeholder="0.00"
-                    step={token === 'USDC' ? "0.000001" : "0.00000001"}
+                    step={sendToken === 'USDC' ? "0.000001" : "0.00000001"}
                     min="0.000001"
                     max="1000000"
                     className={`w-full pl-3 pr-12 py-2 text-sm border-2 rounded-lg focus:outline-none transition-colors ${
@@ -491,7 +529,7 @@ export default function Home() {
                     }`}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gunmetal/50 font-medium text-xs">
-                    {token}
+                    {sendToken}
                   </span>
                 </div>
                 {errors.amount && (
@@ -592,7 +630,7 @@ export default function Home() {
                       body: JSON.stringify({
                         amount: parseFloat(amount),
                         recipientAddress: recipientAddr,
-                        token,
+                        token: sendToken,
                         jwt,
                         ephemeralKeyPairStr,
                       }),
@@ -604,7 +642,7 @@ export default function Home() {
                       throw new Error(data.error || "Transfer failed");
                     }
 
-                    alert(`✅ Sent ${amount} ${token} to ${isEmail ? recipient.trim() : 'address'}! Transaction: ${data.transactionHash}`);
+                    alert(`✅ Sent ${amount} ${sendToken} to ${isEmail ? recipient.trim() : 'address'}! Transaction: ${data.transactionHash}`);
                     setAmount("");
                     setRecipient("");
                   } catch (error) {

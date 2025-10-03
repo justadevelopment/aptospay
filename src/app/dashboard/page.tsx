@@ -128,9 +128,13 @@ export default function DashboardPage() {
                 <div className="p-6 bg-gradient-to-br from-teal/10 to-teal/5 rounded-xl border-2 border-teal/30">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-gunmetal/60">APT Balance</p>
-                    <svg className="w-8 h-8 text-teal opacity-50" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                    </svg>
+                    <Image
+                      src="/aptos-apt-logo.svg"
+                      alt="Aptos"
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 opacity-50"
+                    />
                   </div>
                   <span className="text-3xl font-bold text-gunmetal">{formatAmount(aptBalance, 'APT')}</span>
                 </div>
@@ -139,9 +143,13 @@ export default function DashboardPage() {
                 <div className="p-6 bg-gradient-to-br from-columbia-blue/10 to-columbia-blue/5 rounded-xl border-2 border-columbia-blue/30">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-gunmetal/60">USDC Balance</p>
-                    <svg className="w-8 h-8 text-columbia-blue opacity-50" fill="currentColor" viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="10"/>
-                    </svg>
+                    <Image
+                      src="/usd-coin-usdc-logo.svg"
+                      alt="USDC"
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 opacity-50"
+                    />
                   </div>
                   <span className="text-3xl font-bold text-gunmetal">{formatAmount(usdcBalance, 'USDC')}</span>
                 </div>
