@@ -197,21 +197,21 @@ export default function DashboardPage() {
                 </Link>
 
                 <Link
-                  href="/escrow"
+                  href="/defi"
                   className="group p-6 bg-gradient-to-br from-columbia-blue/80 to-columbia-blue/70 text-gunmetal rounded-xl hover:shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] border-2 border-columbia-blue"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="p-3 bg-white/40 rounded-lg group-hover:bg-white/60 transition-colors">
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                       </svg>
                     </div>
                     <svg className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold mb-1">Escrow Payment</h3>
-                  <p className="text-sm text-gunmetal/70">Secure conditional payments</p>
+                  <h3 className="text-lg font-semibold mb-1">DeFi</h3>
+                  <p className="text-sm text-gunmetal/70">Vesting, Escrow & More</p>
                 </Link>
 
                 <Link

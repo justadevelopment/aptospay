@@ -3,10 +3,10 @@
  * Fetches global escrow registry statistics
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getEscrowStats } from "@/lib/aptos";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const stats = await getEscrowStats();
 

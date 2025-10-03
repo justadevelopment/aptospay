@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getTransactionHistory } from "@/lib/payments";
+// Transaction history is fetched via API route
 
 interface Transaction {
   id: string;
@@ -20,8 +20,11 @@ export default function TransactionHistory({ address }: { address: string }) {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const history = await getTransactionHistory(address);
-        setTransactions(history);
+        const response = await fetch(`/api/transactions?address=${address}`);
+        if (response.ok) {
+          const data = await response.json();
+          setTransactions(data.transactions || []);
+        }
       } catch (error) {
         console.error("Error fetching transaction history:", error);
       } finally {

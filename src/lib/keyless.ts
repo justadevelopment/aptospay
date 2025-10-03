@@ -147,3 +147,28 @@ export function getStoredKeylessAccount(): string | null {
 
   return sessionStorage.getItem("aptos_keyless_account");
 }
+
+// Reconstruct KeylessAccount from session storage (for client-side transactions)
+export async function getKeylessAccount(): Promise<KeylessAccount | null> {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const jwt = sessionStorage.getItem("id_token");
+    const nonce = sessionStorage.getItem("auth_nonce");
+
+    if (!jwt || !nonce) {
+      return null;
+    }
+
+    const ephemeralKeyPair = getEphemeralKeyPair(nonce);
+    if (!ephemeralKeyPair) {
+      return null;
+    }
+
+    const keylessAccount = await deriveKeylessAccount(jwt, ephemeralKeyPair);
+    return keylessAccount;
+  } catch (error) {
+    console.error("Error reconstructing keyless account:", error);
+    return null;
+  }
+}
