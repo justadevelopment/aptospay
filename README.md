@@ -2,7 +2,12 @@
 
 Email-to-crypto payment system on Aptos. Send APT or USDC to anyone with an email—no wallet required. Recipients authenticate with Google OAuth and Aptos derives their account address deterministically.
 
-**Testnet Deployment**: `0x2b6848d433930a6cec8b474f9adcf2d58a1f5f88d5e17f8718a0a93737660efe`
+**Contract Address**: `0x2b6848d433930a6cec8b474f9adcf2d58a1f5f88d5e17f8718a0a93737660efe`
+
+All three contracts deployed as modules under the same address:
+- **Vesting Stream**: [`0x045c65b5...8d9639`](https://explorer.aptoslabs.com/txn/0x045c65b5c3276d25b91a52242136442cbcf8d10a97c4c565e5102e982e8d9639?network=testnet)
+- **Escrow V2**: [`0x51ae0b48...aac84a7`](https://explorer.aptoslabs.com/txn/0x51ae0b48fe9b9ef891ee93503dcf7e1caedfc9ec2307c1e35f337ca75aac84a7?network=testnet)
+- **Payment Escrow**: Deployed to same address
 
 ## Features
 
@@ -17,27 +22,24 @@ Email-to-crypto payment system on Aptos. Send APT or USDC to anyone with an emai
 
 ### Smart Contracts (Aptos Move)
 
-Three deployed modules at `0x2b68...660efe`:
+Three deployed modules at `0x2b6848d433930a6cec8b474f9adcf2d58a1f5f88d5e17f8718a0a93737660efe`:
 
 **1. Vesting Streams** (`vesting_stream.move`)
+- Deployment tx: `0x045c65b5c3276d25b91a52242136442cbcf8d10a97c4c565e5102e982e8d9639`
 - Linear token vesting with optional cliff periods
 - Supports salary streaming (claim earned tokens anytime)
 - Sender can cancel stream and refund unvested tokens
-- 13/13 tests passing
 
 **2. Enhanced Escrow V2** (`escrow_v2.move`)
+- Deployment tx: `0x51ae0b48fe9b9ef891ee93503dcf7e1caedfc9ec2307c1e35f337ca75aac84a7`
 - Factory pattern creates 3 escrow types:
   - Standard: Basic lock/release/cancel
   - Time-Locked: Auto-release after deadline, auto-refund on expiry
   - Arbitrated: Third-party can resolve disputes
-- 16/16 tests passing
 
 **3. Payment Escrow** (`payment_escrow.move`)
 - Original escrow for simple payment holds
 - Backward compatible with V1
-- 14/14 tests passing
-
-**Total**: 43/43 tests passing
 
 ### Architecture
 
@@ -162,21 +164,24 @@ cd contracts
 # Compile
 aptos move compile
 
-# Run tests
+# Run tests (43 total across all modules)
 aptos move test
 
 # Deploy to testnet
 aptos move publish --named-addresses aptospay=default
 ```
 
-Gas cost: ~4,500 Octas (~$0.000045) per contract deployment
+**Note**: In Aptos Move, all modules in a package deploy to a single account address. The three contracts (vesting_stream, escrow_v2, payment_escrow) are separate modules under one address.
+
+Gas cost: ~4,500 Octas (~$0.000045) per deployment transaction
 
 ## Testing
 
 **Smart Contracts**:
 ```bash
 cd contracts && aptos move test
-# Output: Test result: OK. Total tests: 43; passed: 43; failed: 0
+# Vesting: 13 tests | Escrow V2: 16 tests | Payment: 14 tests
+# Total: 43/43 passing
 ```
 
 **Frontend Build**:
