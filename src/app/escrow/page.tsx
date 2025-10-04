@@ -9,7 +9,6 @@ import { EscrowDetails } from "@/lib/aptos";
 
 export default function EscrowPage() {
   const [address, setAddress] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -29,7 +28,6 @@ export default function EscrowPage() {
 
   useEffect(() => {
     const storedAddress = sessionStorage.getItem("aptos_address");
-    const storedEmail = sessionStorage.getItem("user_email");
 
     if (!storedAddress) {
       router.push("/");
@@ -37,7 +35,6 @@ export default function EscrowPage() {
     }
 
     setAddress(storedAddress);
-    setEmail(storedEmail || "");
     setLoading(false);
   }, [router]);
 
@@ -204,15 +201,15 @@ export default function EscrowPage() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/aptospay.png"
-                alt="AptosPay Logo"
+                src="/aptfy.png"
+                alt="Aptfy Logo"
                 width={28}
                 height={28}
                 className="h-7 w-7"
                 priority
               />
               <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                aptospay
+                aptfy
               </span>
             </Link>
 

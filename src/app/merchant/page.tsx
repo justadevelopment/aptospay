@@ -10,7 +10,6 @@ import { TokenSymbol, getSupportedTokens, formatAmount } from "@/lib/tokens";
 
 export default function MerchantPage() {
   const [address, setAddress] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [merchantName, setMerchantName] = useState("");
   const [amount, setAmount] = useState("");
@@ -23,7 +22,6 @@ export default function MerchantPage() {
 
   useEffect(() => {
     const storedAddress = sessionStorage.getItem("aptos_address");
-    const storedEmail = sessionStorage.getItem("user_email");
 
     if (!storedAddress) {
       router.push("/");
@@ -31,9 +29,6 @@ export default function MerchantPage() {
     }
 
     setAddress(storedAddress);
-    if (storedEmail) {
-      setEmail(storedEmail);
-    }
     setLoading(false);
   }, [router]);
 
@@ -95,7 +90,7 @@ export default function MerchantPage() {
       const pngFile = canvas.toDataURL("image/png");
 
       const downloadLink = document.createElement("a");
-      downloadLink.download = `aptospay-${merchantName.replace(/\s+/g, "-")}-${amount}-${token}.png`;
+      downloadLink.download = `aptfy-${merchantName.replace(/\s+/g, "-")}-${amount}-${token}.png`;
       downloadLink.href = pngFile;
       downloadLink.click();
     };
@@ -122,15 +117,15 @@ export default function MerchantPage() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/aptospay.png"
-                alt="AptosPay Logo"
+                src="/aptfy.png"
+                alt="Aptfy Logo"
                 width={28}
                 height={28}
                 className="h-7 w-7"
                 priority
               />
               <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                aptospay
+                aptfy
               </span>
             </Link>
 

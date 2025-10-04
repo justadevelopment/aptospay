@@ -80,14 +80,14 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/aptospay.png"
-                alt="AptosPay Logo"
+                src="/aptfy.png"
+                alt="Aptfy Logo"
                 width={28}
                 height={28}
                 className="h-7 w-7"
                 priority
               />
-              <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+              <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptfy</span>
             </Link>
 
             <button

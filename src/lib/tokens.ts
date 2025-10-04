@@ -1,5 +1,5 @@
 /**
- * Token configuration for AptosPay
+ * Token configuration for Aptfy
  * Supports APT (native coin) and USDC (fungible asset)
  */
 

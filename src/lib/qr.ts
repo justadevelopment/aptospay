@@ -1,5 +1,5 @@
 /**
- * QR Code generation and parsing utilities for AptosPay
+ * QR Code generation and parsing utilities for Aptfy
  * Supports payment requests with APT and USDC
  */
 

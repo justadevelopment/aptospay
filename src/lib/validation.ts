@@ -1,4 +1,4 @@
-// Comprehensive validation utilities for AptosPay
+// Comprehensive validation utilities for Aptfy
 
 export interface ValidationResult {
   isValid: boolean;
@@ -91,7 +91,7 @@ export function validatePaymentLink(link: string): ValidationResult {
   try {
     const url = new URL(link);
 
-    // Check if it's a valid AptosPay link
+    // Check if it's a valid Aptfy link
     if (!url.pathname.startsWith('/pay/')) {
       return { isValid: false, error: "Invalid payment link format" };
     }

@@ -271,8 +271,8 @@ export async function getEscrowDetails(escrowId: number): Promise<EscrowV2 | nul
       cancelled: cancelled as boolean,
       released_by: null, // Not returned by view function
     };
-  } catch (_error) {
-    console.error(`Escrow ${escrowId} not found:`, _error);
+  } catch (error) {
+    console.error(`Escrow ${escrowId} not found:`, error);
     return null;
   }
 }
@@ -290,7 +290,7 @@ export async function escrowExists(escrowId: number): Promise<boolean> {
     });
 
     return result[0] as boolean;
-  } catch (_error) {
+  } catch {
     return false;
   }
 }
@@ -308,7 +308,7 @@ export async function isExpired(escrowId: number): Promise<boolean> {
     });
 
     return result[0] as boolean;
-  } catch (_error) {
+  } catch {
     return false;
   }
 }
@@ -326,7 +326,7 @@ export async function isClaimable(escrowId: number): Promise<boolean> {
     });
 
     return result[0] as boolean;
-  } catch (_error) {
+  } catch {
     return false;
   }
 }

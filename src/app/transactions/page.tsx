@@ -104,15 +104,15 @@ export default function TransactionsPage() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/aptospay.png"
-                alt="AptosPay Logo"
+                src="/aptfy.png"
+                alt="Aptfy Logo"
                 width={32}
                 height={32}
                 className="h-8 w-8"
                 priority
               />
               <span className="text-2xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                aptospay
+                aptfy
               </span>
             </Link>
 

@@ -9,13 +9,11 @@ import {
   createVestingStream,
   claimVested,
   cancelStream,
-  getStreamDetails,
   getStreamsForAddress,
   getRegistryStats,
   calculateVestingProgress,
   formatOctasToAPT as formatVestingOctasToAPT,
   getVestingStatus,
-  calculateClaimableAmount,
   type VestingStream,
 } from "@/lib/vesting";
 import {
@@ -25,7 +23,6 @@ import {
   releaseEscrow,
   cancelEscrow as cancelEscrowV2,
   claimExpiredEscrow,
-  getEscrowDetails,
   getEscrowsForAddress,
   getRegistryStats as getEscrowRegistryStats,
   getEscrowTypeName,
@@ -34,6 +31,20 @@ import {
   formatOctasToAPT as formatEscrowOctasToAPT,
   type EscrowV2,
 } from "@/lib/escrow_v2";
+import {
+  supplyApt,
+  withdrawApt,
+  borrowApt,
+  repayApt,
+  getPoolDetails,
+  getPositionDetails,
+  poolExists,
+  positionExists,
+  formatHealthFactor,
+  formatApr,
+  type LendingPoolDetails,
+  type UserPosition,
+} from "@/lib/p2p_lending";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -42,7 +53,7 @@ import "@fontsource/outfit/400.css";
 import "@fontsource/outfit/500.css";
 import "@fontsource/outfit/600.css";
 
-type Tab = "vesting" | "escrow";
+type Tab = "vesting" | "escrow" | "lending";
 
 export default function DeFiPage() {
   const [activeTab, setActiveTab] = useState<Tab>("vesting");
@@ -66,14 +77,14 @@ export default function DeFiPage() {
           <div className="flex items-center justify-between">
             <Link href="/dashboard" className="flex items-center gap-2">
               <Image
-                src="/aptospay.png"
-                alt="AptosPay Logo"
+                src="/aptfy.png"
+                alt="Aptfy Logo"
                 width={28}
                 height={28}
                 className="h-7 w-7"
                 priority
               />
-              <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+              <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptfy</span>
             </Link>
 
             <Link
@@ -114,6 +125,16 @@ export default function DeFiPage() {
             }`}
           >
             Escrow
+          </button>
+          <button
+            onClick={() => setActiveTab("lending")}
+            className={`px-6 py-3 font-medium transition-all relative ${
+              activeTab === "lending"
+                ? "text-teal border-b-2 border-teal"
+                : "text-gunmetal/60 hover:text-gunmetal"
+            }`}
+          >
+            P2P Lending
           </button>
         </div>
 
@@ -237,6 +258,61 @@ export default function DeFiPage() {
             </div>
           </div>
         )}
+
+        {activeTab === "lending" && (
+          <div className="space-y-8">
+            {/* Pool Stats */}
+            <LendingPoolStats />
+
+            {/* User Position */}
+            <UserPositionCard address={address} />
+
+            {/* Supply/Withdraw Section */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <SupplyForm address={address} />
+              <WithdrawForm address={address} />
+            </div>
+
+            {/* Borrow/Repay Section */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <BorrowForm address={address} />
+              <RepayForm address={address} />
+            </div>
+
+            {/* Lending Info */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="bg-teal/10 border border-teal rounded-2xl p-6">
+                <div className="w-12 h-12 bg-teal rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-gunmetal mb-2">Earn Interest</h3>
+                <p className="text-sm text-gunmetal/60">Supply APT to the lending pool and earn dynamic interest rates (0-110% APR)</p>
+              </div>
+
+              <div className="bg-teal/10 border border-teal rounded-2xl p-6">
+                <div className="w-12 h-12 bg-teal rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-gunmetal mb-2">Borrow Assets</h3>
+                <p className="text-sm text-gunmetal/60">Borrow against your collateral with 75% LTV ratio and maintain health factor above 1.0</p>
+              </div>
+
+              <div className="bg-teal/10 border border-teal rounded-2xl p-6">
+                <div className="w-12 h-12 bg-teal rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-gunmetal mb-2">Safe Liquidations</h3>
+                <p className="text-sm text-gunmetal/60">Automated liquidations at 80% threshold protect lenders, liquidators earn 5% bonus</p>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
@@ -244,6 +320,7 @@ export default function DeFiPage() {
 
 // ============ Vesting Stream Components ============
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function VestingStreamForm({ address }: { address: string }) {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
@@ -622,6 +699,7 @@ function VestingStreamList({ address }: { address: string }) {
 
 // ============ Escrow Components ============
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function EscrowForm({ address }: { address: string }) {
   const [escrowType, setEscrowType] = useState<"standard" | "time_locked" | "arbitrated">("standard");
   const [recipient, setRecipient] = useState("");
@@ -1133,6 +1211,669 @@ function EscrowList({ address }: { address: string }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ============ P2P Lending Components ============
+
+function LendingPoolStats() {
+  const [poolData, setPoolData] = useState<LendingPoolDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadPoolData = async () => {
+      try {
+        const exists = await poolExists();
+        if (exists) {
+          const data = await getPoolDetails();
+          setPoolData(data);
+        }
+      } catch (error) {
+        console.error("Error loading pool data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPoolData();
+    const interval = setInterval(loadPoolData, 15000); // Refresh every 15s
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
+        <div className="text-center py-8">
+          <div className="w-8 h-8 border-4 border-teal border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gunmetal/60">Loading pool data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!poolData) {
+    return (
+      <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
+        <div className="text-center py-8">
+          <div className="w-16 h-16 bg-lavender-web rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-gunmetal/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p className="text-gunmetal/60">Lending pool not initialized</p>
+          <p className="text-sm text-gunmetal/40 mt-1">Contact admin to create the APT lending pool</p>
+        </div>
+      </div>
+    );
+  }
+
+  const totalLiquidityAPT = poolData.total_liquidity / 100_000_000;
+  const totalBorrowedAPT = poolData.total_borrowed / 100_000_000;
+  const availableLiquidity = totalLiquidityAPT - totalBorrowedAPT;
+  const utilizationRate = totalLiquidityAPT > 0 ? (totalBorrowedAPT / totalLiquidityAPT) * 100 : 0;
+
+  return (
+    <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
+      <div className="flex items-start gap-4 mb-6">
+        <div className="p-3 bg-teal/10 rounded-xl">
+          <svg className="w-6 h-6 text-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+        </div>
+        <div>
+          <h2 className="text-2xl font-semibold text-gunmetal mb-2">Lending Pool Statistics</h2>
+          <p className="text-gunmetal/60">Real-time pool metrics and interest rates</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+        <div className="bg-lavender-web/30 rounded-xl p-4">
+          <p className="text-sm text-gunmetal/60 mb-1">Total Liquidity</p>
+          <p className="text-2xl font-bold text-gunmetal">{totalLiquidityAPT.toFixed(2)} APT</p>
+        </div>
+
+        <div className="bg-lavender-web/30 rounded-xl p-4">
+          <p className="text-sm text-gunmetal/60 mb-1">Total Borrowed</p>
+          <p className="text-2xl font-bold text-gunmetal">{totalBorrowedAPT.toFixed(2)} APT</p>
+        </div>
+
+        <div className="bg-lavender-web/30 rounded-xl p-4">
+          <p className="text-sm text-gunmetal/60 mb-1">Available</p>
+          <p className="text-2xl font-bold text-teal">{availableLiquidity.toFixed(2)} APT</p>
+        </div>
+
+        <div className="bg-lavender-web/30 rounded-xl p-4">
+          <p className="text-sm text-gunmetal/60 mb-1">Supply APR</p>
+          <p className="text-2xl font-bold text-green-600">{formatApr(poolData.current_supply_rate).toFixed(2)}%</p>
+        </div>
+
+        <div className="bg-lavender-web/30 rounded-xl p-4">
+          <p className="text-sm text-gunmetal/60 mb-1">Borrow APR</p>
+          <p className="text-2xl font-bold text-orange-600">{formatApr(poolData.current_borrow_rate).toFixed(2)}%</p>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <div className="flex justify-between text-sm mb-2">
+          <span className="text-gunmetal/60">Utilization Rate</span>
+          <span className="font-medium text-teal">{utilizationRate.toFixed(2)}%</span>
+        </div>
+        <div className="w-full bg-lavender-web rounded-full h-3 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 transition-all duration-500"
+            style={{ width: `${utilizationRate}%` }}
+          />
+        </div>
+        <p className="text-xs text-gunmetal/40 mt-2">Optimal utilization: 80%</p>
+      </div>
+    </div>
+  );
+}
+
+function UserPositionCard({ address }: { address: string }) {
+  const [position, setPosition] = useState<UserPosition | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [hasPosition, setHasPosition] = useState(false);
+
+  useEffect(() => {
+    const loadPosition = async () => {
+      if (!address) return;
+
+      try {
+        const exists = await positionExists(address);
+        setHasPosition(exists);
+
+        if (exists) {
+          const data = await getPositionDetails(address);
+          setPosition(data);
+        }
+      } catch (error) {
+        console.error("Error loading position:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPosition();
+    const interval = setInterval(loadPosition, 15000); // Refresh every 15s
+    return () => clearInterval(interval);
+  }, [address]);
+
+  if (loading) {
+    return (
+      <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
+        <div className="text-center py-8">
+          <div className="w-8 h-8 border-4 border-teal border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gunmetal/60">Loading your position...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasPosition || !position) {
+    return (
+      <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
+        <div className="text-center py-8">
+          <div className="w-16 h-16 bg-lavender-web rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-gunmetal/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <p className="text-gunmetal/60">No active position</p>
+          <p className="text-sm text-gunmetal/40 mt-1">Supply or borrow to get started</p>
+        </div>
+      </div>
+    );
+  }
+
+  const suppliedAPT = position.supplied_amount / 100_000_000;
+  const borrowedAPT = position.borrowed_amount / 100_000_000;
+  const collateralAPT = position.collateral_amount / 100_000_000;
+  const healthFactor = formatHealthFactor(position.health_factor);
+  const isAtRisk = healthFactor < 1.25 && borrowedAPT > 0;
+
+  return (
+    <div className={`bg-white border-2 rounded-2xl p-8 ${isAtRisk ? 'border-red-400' : 'border-lavender-web'}`}>
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-teal/10 rounded-xl">
+            <svg className="w-6 h-6 text-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-2xl font-semibold text-gunmetal mb-2">Your Position</h2>
+            <p className="text-gunmetal/60">Current lending and borrowing status</p>
+          </div>
+        </div>
+
+        {borrowedAPT > 0 && (
+          <div className={`px-4 py-2 rounded-xl ${
+            healthFactor >= 1.5 ? 'bg-green-100 text-green-700' :
+            healthFactor >= 1.25 ? 'bg-yellow-100 text-yellow-700' :
+            healthFactor >= 1.0 ? 'bg-orange-100 text-orange-700' :
+            'bg-red-100 text-red-700'
+          }`}>
+            <p className="text-xs font-medium mb-1">Health Factor</p>
+            <p className="text-2xl font-bold">{healthFactor.toFixed(3)}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 gap-6 mb-6">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+          <p className="text-sm text-green-900/60 mb-1">Supplied</p>
+          <p className="text-2xl font-bold text-green-900">{suppliedAPT.toFixed(4)} APT</p>
+        </div>
+
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+          <p className="text-sm text-orange-900/60 mb-1">Borrowed</p>
+          <p className="text-2xl font-bold text-orange-900">{borrowedAPT.toFixed(4)} APT</p>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <p className="text-sm text-blue-900/60 mb-1">Collateral</p>
+          <p className="text-2xl font-bold text-blue-900">{collateralAPT.toFixed(4)} APT</p>
+        </div>
+      </div>
+
+      {isAtRisk && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+              <p className="font-semibold text-red-900 mb-1">Liquidation Risk</p>
+              <p className="text-sm text-red-800">Your health factor is low. Repay debt or add collateral to avoid liquidation.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="pt-4 border-t border-lavender-web">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gunmetal/60">Position Status</span>
+          <span className={`font-medium ${
+            borrowedAPT === 0 && suppliedAPT > 0 ? 'text-green-600' :
+            healthFactor >= 1.25 ? 'text-teal' :
+            'text-orange-600'
+          }`}>
+            {borrowedAPT === 0 && suppliedAPT > 0 ? 'Supplying Only' :
+             borrowedAPT > 0 ? 'Borrowing Active' : 'Active'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function SupplyForm({ address }: { address: string }) {
+  const [amount, setAmount] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      const amountNum = parseFloat(amount);
+      if (isNaN(amountNum) || amountNum <= 0) {
+        throw new Error("Invalid amount");
+      }
+
+      const keylessAccount = await getKeylessAccount();
+      if (!keylessAccount) {
+        throw new Error("Please sign in to supply");
+      }
+
+      const txHash = await supplyApt(keylessAccount, amountNum);
+      setSuccess(`Successfully supplied ${amountNum} APT! Tx: ${txHash.slice(0, 10)}...`);
+      setAmount("");
+
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to supply";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
+      <div className="flex items-start gap-4 mb-6">
+        <div className="p-3 bg-green-100 rounded-xl">
+          <svg className="w-6 h-6 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-gunmetal mb-1">Supply APT</h3>
+          <p className="text-sm text-gunmetal/60">Earn interest on your supplied assets</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gunmetal mb-2">
+            Amount (APT)
+          </label>
+          <input
+            type="number"
+            step="0.00000001"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="10.0"
+            className="w-full px-4 py-3 border-2 border-lavender-web rounded-xl focus:border-teal focus:outline-none"
+            required
+          />
+        </div>
+
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm">
+            {success}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full px-6 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {loading ? "Supplying..." : "Supply APT"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function WithdrawForm({ address }: { address: string }) {
+  const [amount, setAmount] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      const amountNum = parseFloat(amount);
+      if (isNaN(amountNum) || amountNum <= 0) {
+        throw new Error("Invalid amount");
+      }
+
+      const keylessAccount = await getKeylessAccount();
+      if (!keylessAccount) {
+        throw new Error("Please sign in to withdraw");
+      }
+
+      const txHash = await withdrawApt(keylessAccount, amountNum);
+      setSuccess(`Successfully withdrawn ${amountNum} APT! Tx: ${txHash.slice(0, 10)}...`);
+      setAmount("");
+
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to withdraw";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
+      <div className="flex items-start gap-4 mb-6">
+        <div className="p-3 bg-blue-100 rounded-xl">
+          <svg className="w-6 h-6 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-gunmetal mb-1">Withdraw APT</h3>
+          <p className="text-sm text-gunmetal/60">Withdraw your supplied assets</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gunmetal mb-2">
+            Amount (APT)
+          </label>
+          <input
+            type="number"
+            step="0.00000001"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="10.0"
+            className="w-full px-4 py-3 border-2 border-lavender-web rounded-xl focus:border-teal focus:outline-none"
+            required
+          />
+        </div>
+
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm">
+            {success}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {loading ? "Withdrawing..." : "Withdraw APT"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function BorrowForm({ address }: { address: string }) {
+  const [collateralAmount, setCollateralAmount] = useState("");
+  const [borrowAmount, setBorrowAmount] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      const collateralNum = parseFloat(collateralAmount);
+      const borrowNum = parseFloat(borrowAmount);
+
+      if (isNaN(collateralNum) || collateralNum <= 0) {
+        throw new Error("Invalid collateral amount");
+      }
+
+      if (isNaN(borrowNum) || borrowNum <= 0) {
+        throw new Error("Invalid borrow amount");
+      }
+
+      // Check LTV ratio (75% max)
+      if (borrowNum > collateralNum * 0.75) {
+        throw new Error("Borrow amount exceeds 75% LTV ratio. Maximum borrow: " + (collateralNum * 0.75).toFixed(4) + " APT");
+      }
+
+      const keylessAccount = await getKeylessAccount();
+      if (!keylessAccount) {
+        throw new Error("Please sign in to borrow");
+      }
+
+      const txHash = await borrowApt(keylessAccount, collateralNum, borrowNum);
+      setSuccess(`Successfully borrowed ${borrowNum} APT! Tx: ${txHash.slice(0, 10)}...`);
+      setCollateralAmount("");
+      setBorrowAmount("");
+
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to borrow";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateMaxBorrow = () => {
+    const collateralNum = parseFloat(collateralAmount);
+    if (!isNaN(collateralNum) && collateralNum > 0) {
+      const maxBorrow = collateralNum * 0.75;
+      setBorrowAmount(maxBorrow.toFixed(4));
+    }
+  };
+
+  return (
+    <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
+      <div className="flex items-start gap-4 mb-6">
+        <div className="p-3 bg-orange-100 rounded-xl">
+          <svg className="w-6 h-6 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 8h6m-5 0a3 3 0 110 6H9l3 3m-3-6h6m6 1a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-gunmetal mb-1">Borrow APT</h3>
+          <p className="text-sm text-gunmetal/60">Borrow against collateral (75% LTV max)</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gunmetal mb-2">
+            Collateral Amount (APT)
+          </label>
+          <input
+            type="number"
+            step="0.00000001"
+            value={collateralAmount}
+            onChange={(e) => setCollateralAmount(e.target.value)}
+            placeholder="100.0"
+            className="w-full px-4 py-3 border-2 border-lavender-web rounded-xl focus:border-teal focus:outline-none"
+            required
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gunmetal">
+              Borrow Amount (APT)
+            </label>
+            <button
+              type="button"
+              onClick={calculateMaxBorrow}
+              className="text-xs text-teal hover:underline"
+            >
+              Max (75%)
+            </button>
+          </div>
+          <input
+            type="number"
+            step="0.00000001"
+            value={borrowAmount}
+            onChange={(e) => setBorrowAmount(e.target.value)}
+            placeholder="75.0"
+            className="w-full px-4 py-3 border-2 border-lavender-web rounded-xl focus:border-teal focus:outline-none"
+            required
+          />
+        </div>
+
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm">
+            {success}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full px-6 py-3 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {loading ? "Borrowing..." : "Borrow APT"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function RepayForm({ address }: { address: string }) {
+  const [amount, setAmount] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      const amountNum = parseFloat(amount);
+      if (isNaN(amountNum) || amountNum <= 0) {
+        throw new Error("Invalid amount");
+      }
+
+      const keylessAccount = await getKeylessAccount();
+      if (!keylessAccount) {
+        throw new Error("Please sign in to repay");
+      }
+
+      const txHash = await repayApt(keylessAccount, amountNum);
+      setSuccess(`Successfully repaid ${amountNum} APT! Tx: ${txHash.slice(0, 10)}...`);
+      setAmount("");
+
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to repay";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
+      <div className="flex items-start gap-4 mb-6">
+        <div className="p-3 bg-purple-100 rounded-xl">
+          <svg className="w-6 h-6 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-gunmetal mb-1">Repay APT</h3>
+          <p className="text-sm text-gunmetal/60">Repay your borrowed assets</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gunmetal mb-2">
+            Repay Amount (APT)
+          </label>
+          <input
+            type="number"
+            step="0.00000001"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="10.0"
+            className="w-full px-4 py-3 border-2 border-lavender-web rounded-xl focus:border-teal focus:outline-none"
+            required
+          />
+        </div>
+
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm">
+            {success}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full px-6 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {loading ? "Repaying..." : "Repay Debt"}
+        </button>
+      </form>
     </div>
   );
 }

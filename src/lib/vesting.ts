@@ -61,7 +61,7 @@ export async function createVestingStream(
     transaction,
   });
 
-  const _response = await aptos.waitForTransaction({
+  await aptos.waitForTransaction({
     transactionHash: pendingTxn.hash,
   });
 
@@ -204,7 +204,7 @@ export async function streamExists(streamId: number): Promise<boolean> {
     });
 
     return result[0] as boolean;
-  } catch (_error) {
+  } catch {
     return false;
   }
 }

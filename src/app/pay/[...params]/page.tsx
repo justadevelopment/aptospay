@@ -21,7 +21,6 @@ export default function PaymentClaimPage({
   const [paymentId, setPaymentId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [redirecting, setRedirecting] = useState(false);
-  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     const parseParams = async () => {
@@ -41,8 +40,6 @@ export default function PaymentClaimPage({
 
         if (id) {
           setPaymentId(id);
-        } else {
-          setError("Payment ID not found. This link may be invalid.");
         }
       }
 
@@ -54,7 +51,6 @@ export default function PaymentClaimPage({
 
   const handleClaimPayment = () => {
     if (!paymentId) {
-      setError("Cannot claim payment without payment ID");
       return;
     }
 
@@ -103,14 +99,14 @@ export default function PaymentClaimPage({
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <Image
-            src="/aptospay.png"
-            alt="AptosPay Logo"
+            src="/aptfy.png"
+            alt="Aptfy Logo"
             width={32}
             height={32}
             className="h-8 w-8"
             priority
           />
-          <span className="text-2xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+          <span className="text-2xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptfy</span>
         </div>
 
         {/* Payment Card */}

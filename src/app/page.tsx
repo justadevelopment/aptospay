@@ -177,14 +177,14 @@ export default function Home() {
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src="/aptospay.png"
-              alt="AptosPay Logo"
+              src="/aptfy.png"
+              alt="Aptfy Logo"
               width={28}
               height={28}
               className="h-7 w-7"
               priority
             />
-            <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+            <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptfy</span>
           </Link>
 
           <div className="flex items-center space-x-4">
@@ -732,7 +732,7 @@ export default function Home() {
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-gunmetal/60">Share via:</span>
                   <a
-                    href={`mailto:${recipient}?subject=You've got money!&body=Hey! I'm sending you $${amount} via AptosPay. Click here to claim: ${paymentLink}`}
+                    href={`mailto:${recipient}?subject=You've got money!&body=Hey! I'm sending you $${amount} via Aptfy. Click here to claim: ${paymentLink}`}
                     className="px-3 py-2 bg-white border-2 border-columbia-blue text-gunmetal rounded-lg hover:bg-columbia-blue/20 transition-all text-xs font-medium inline-flex items-center space-x-1"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -741,7 +741,7 @@ export default function Home() {
                     <span>Email</span>
                   </a>
                   <a
-                    href={`https://wa.me/?text=Hey! I'm sending you $${amount} via AptosPay. Click here to claim: ${encodeURIComponent(paymentLink)}`}
+                    href={`https://wa.me/?text=Hey! I'm sending you $${amount} via Aptfy. Click here to claim: ${encodeURIComponent(paymentLink)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-2 bg-white border-2 border-columbia-blue text-gunmetal rounded-lg hover:bg-columbia-blue/20 transition-all text-xs font-medium inline-flex items-center space-x-1"
@@ -752,7 +752,7 @@ export default function Home() {
                     <span>WhatsApp</span>
                   </a>
                   <a
-                    href={`https://twitter.com/intent/tweet?text=I'm sending you $${amount} via AptosPay! Claim it here: ${encodeURIComponent(paymentLink)}`}
+                    href={`https://twitter.com/intent/tweet?text=I'm sending you $${amount} via Aptfy! Claim it here: ${encodeURIComponent(paymentLink)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-2 bg-white border-2 border-columbia-blue text-gunmetal rounded-lg hover:bg-columbia-blue/20 transition-all text-xs font-medium inline-flex items-center space-x-1"
@@ -850,13 +850,13 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
               <Image
-                src="/aptospay.png"
-                alt="AptosPay Logo"
+                src="/aptfy.png"
+                alt="Aptfy Logo"
                 width={16}
                 height={16}
                 className="h-4 w-4 opacity-60"
               />
-              <span className="text-sm font-medium text-gunmetal/60" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+              <span className="text-sm font-medium text-gunmetal/60" style={{ fontFamily: "'Outfit', sans-serif" }}>aptfy</span>
               <span className="text-sm text-gunmetal/60">© 2025</span>
             </div>
 

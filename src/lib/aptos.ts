@@ -340,7 +340,7 @@ export async function getEscrowStats(): Promise<EscrowStats | null> {
  * This requires indexing events since Move doesn't support iteration
  * For now, returns empty array - will be implemented with event indexing
  */
-export async function getUserEscrows(_userAddress: string): Promise<EscrowDetails[]> {
+export async function getUserEscrows(): Promise<EscrowDetails[]> {
   // TODO: Implement event indexing to fetch user's escrows
   // This would require:
   // 1. Querying EscrowCreatedEvent events

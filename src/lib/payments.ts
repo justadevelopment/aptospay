@@ -1,5 +1,5 @@
 /**
- * Payment processing functions for AptosPay
+ * Payment processing functions for Aptfy
  * PRODUCTION-READY: Real Aptos transactions only, no mocks or fallbacks
  */
 

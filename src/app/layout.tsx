@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AptosPay - Send Money Without Wallets",
+  title: "Aptfy - Send Money Without Wallets",
   description: "Create payment links that anyone can claim using just their email. No crypto wallet required. Powered by Aptos Keyless Accounts.",
 };
 
