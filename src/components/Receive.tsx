@@ -6,6 +6,7 @@ import { validatePaymentAmount, sanitizeInput } from "@/lib/validation";
 import { generateEphemeralKeyPair, storeEphemeralKeyPair, createGoogleAuthUrl } from "@/lib/keyless";
 import { TokenSymbol, getSupportedTokens } from "@/lib/tokens";
 import { getBalance } from "@/lib/aptos";
+import PaymentLinkDialog from "./PaymentLinkDialog";
 
 interface ReceiveProps {
   showPaymentLink?: boolean;
@@ -17,13 +18,17 @@ export default function Receive({ showPaymentLink = true }: ReceiveProps) {
   const [receiveToken, setReceiveToken] = useState<TokenSymbol>("APT");
   const [receiveErrors, setReceiveErrors] = useState<{ amount?: string; recipient?: string }>({});
   const [receiveLoading, setReceiveLoading] = useState(false);
-  const [paymentLink, setPaymentLink] = useState("");
-  const [copied, setCopied] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userAddress, setUserAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState(false);
+
+  // Dialog State
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogStatus, setDialogStatus] = useState<"loading" | "success" | "error">("loading");
+  const [dialogPaymentLink, setDialogPaymentLink] = useState<string | null>(null);
+  const [dialogError, setDialogError] = useState<string>("");
 
   useEffect(() => {
     const email = sessionStorage.getItem("user_email");
@@ -70,41 +75,45 @@ export default function Receive({ showPaymentLink = true }: ReceiveProps) {
     }
 
     setReceiveErrors({});
+
+    // Validate first
+    const amountValidation = validatePaymentAmount(receiveAmount, receiveToken);
+    const newErrors: { amount?: string; recipient?: string } = {};
+
+    if (!amountValidation.isValid) {
+      newErrors.amount = amountValidation.error;
+    }
+
+    const aptosAddressRegex = /^0x[a-fA-F0-9]{64}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    const isAddress = aptosAddressRegex.test(receiveRecipient.trim());
+    const isEmail = emailRegex.test(receiveRecipient.trim());
+
+    if (!isAddress && !isEmail) {
+      newErrors.recipient = "Enter a valid email or Aptos address (0x...)";
+    }
+
+    if (isAddress) {
+      newErrors.recipient = "Direct address transfers coming soon. Use email for now.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setReceiveErrors(newErrors);
+      return;
+    }
+
+    // Open dialog with loading state
+    setDialogOpen(true);
+    setDialogStatus("loading");
+    setDialogPaymentLink(null);
+    setDialogError("");
     setReceiveLoading(true);
 
     try {
-      const amountValidation = validatePaymentAmount(receiveAmount, receiveToken);
-      const newErrors: { amount?: string; recipient?: string } = {};
-
-      if (!amountValidation.isValid) {
-        newErrors.amount = amountValidation.error;
-      }
-
-      const aptosAddressRegex = /^0x[a-fA-F0-9]{64}$/;
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      const isAddress = aptosAddressRegex.test(receiveRecipient.trim());
-      const isEmail = emailRegex.test(receiveRecipient.trim());
-
-      if (!isAddress && !isEmail) {
-        newErrors.recipient = "Enter a valid email or Aptos address (0x...)";
-      }
-
-      if (Object.keys(newErrors).length > 0) {
-        setReceiveErrors(newErrors);
-        setReceiveLoading(false);
-        return;
-      }
-
       const sanitizedAmount = sanitizeInput(receiveAmount);
       const sanitizedRecipient = sanitizeInput(receiveRecipient).toLowerCase();
       const senderAddress = sessionStorage.getItem("aptos_address") || undefined;
-
-      if (isAddress) {
-        setReceiveErrors({ recipient: "Direct address transfers coming soon. Use email for now." });
-        setReceiveLoading(false);
-        return;
-      }
 
       const response = await fetch("/api/payments/create", {
         method: "POST",
@@ -115,31 +124,38 @@ export default function Receive({ showPaymentLink = true }: ReceiveProps) {
           amount: sanitizedAmount,
           recipientEmail: sanitizedRecipient,
           senderAddress,
+          token: receiveToken,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setReceiveErrors({ amount: data.error || "Failed to create payment" });
+        setDialogStatus("error");
+        setDialogError(data.error || "Failed to create payment link");
         setReceiveLoading(false);
         return;
       }
 
-      setPaymentLink(data.paymentUrl);
+      // Show success in dialog
+      setDialogStatus("success");
+      setDialogPaymentLink(data.paymentUrl);
+      setReceiveAmount("");
+      setReceiveRecipient("");
     } catch (error) {
       console.error("Error creating payment:", error);
-      setReceiveErrors({ amount: "Failed to create payment link. Please try again." });
+      setDialogStatus("error");
+      setDialogError("Failed to create payment link. Please try again.");
     } finally {
       setReceiveLoading(false);
     }
   };
 
-  const copyToClipboard = async () => {
-    if (!paymentLink) return;
-    await navigator.clipboard.writeText(paymentLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setDialogStatus("loading");
+    setDialogPaymentLink(null);
+    setDialogError("");
   };
 
   return (
@@ -300,58 +316,17 @@ export default function Receive({ showPaymentLink = true }: ReceiveProps) {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 mt-auto">
-                  <button
-                    onClick={generatePaymentLink}
-                    disabled={!receiveAmount || !receiveRecipient || receiveLoading}
-                    className="py-2.5 bg-gunmetal text-white rounded-lg font-semibold text-xs hover:bg-gunmetal/90 disabled:bg-lavender-web disabled:text-gunmetal/30 transition-all flex items-center justify-center space-x-1"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                    <span>{receiveLoading ? "Creating..." : "Generate Link"}</span>
-                  </button>
-                  <button
-                    onClick={async () => {
-                      alert("QR code generation coming soon!");
-                    }}
-                    disabled={!receiveAmount || !receiveRecipient || receiveLoading}
-                    className="py-2.5 bg-teal text-white rounded-lg font-semibold text-xs hover:bg-teal/90 disabled:bg-lavender-web disabled:text-gunmetal/30 transition-all flex items-center justify-center space-x-1"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                    </svg>
-                    <span>Generate QR</span>
-                  </button>
-                </div>
+                <button
+                  onClick={generatePaymentLink}
+                  disabled={!receiveAmount || !receiveRecipient || receiveLoading}
+                  className="py-2.5 bg-gunmetal text-white rounded-lg font-semibold text-xs hover:bg-gunmetal/90 disabled:bg-lavender-web disabled:text-gunmetal/30 transition-all flex items-center justify-center space-x-1 mt-auto"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                  </svg>
+                  <span>{receiveLoading ? "Creating..." : "Generate Link & QR"}</span>
+                </button>
               </div>
-
-              {/* Payment Link Display */}
-              {showPaymentLink && paymentLink && (
-                <div className="mt-3 p-3 bg-columbia-blue/30 border-2 border-columbia-blue rounded-xl animate-fadeIn">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-gunmetal">Payment link ready</span>
-                    <span className="text-[10px] bg-teal text-white px-2 py-0.5 rounded-full">Active</span>
-                  </div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <input
-                      type="text"
-                      value={paymentLink}
-                      readOnly
-                      className="flex-1 px-3 py-2 bg-white border-2 border-columbia-blue rounded-lg text-xs font-mono text-gunmetal"
-                    />
-                    <button
-                      onClick={copyToClipboard}
-                      className="px-4 py-2 bg-gunmetal text-white rounded-lg hover:bg-gunmetal/90 transition-all text-xs"
-                    >
-                      {copied ? "Copied" : "Copy"}
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-gunmetal/60">
-                    Send to <span className="font-medium">{receiveRecipient}</span> for <span className="font-medium">${receiveAmount}</span>
-                  </p>
-                </div>
-              )}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -375,6 +350,18 @@ export default function Receive({ showPaymentLink = true }: ReceiveProps) {
           )}
         </div>
       </div>
+
+      {/* Payment Link Dialog */}
+      <PaymentLinkDialog
+        isOpen={dialogOpen}
+        onClose={handleCloseDialog}
+        status={dialogStatus}
+        paymentLink={dialogPaymentLink}
+        errorMessage={dialogError}
+        amount={receiveAmount}
+        recipient={receiveRecipient}
+        token={receiveToken}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { generateEphemeralKeyPair, storeEphemeralKeyPair, createGoogleAuthUrl } from "@/lib/keyless";
+import { safeFetch } from "@/lib/fetch-helpers";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -16,37 +17,55 @@ export default function PaymentClaimPage({
 }: {
   params: Promise<{ params: string[] }>
 }) {
-  const [amount, setAmount] = useState<string>("");
-  const [recipient, setRecipient] = useState<string>("");
+  const [payment, setPayment] = useState<{
+    amount: number;
+    recipientEmail: string;
+    token: string;
+  } | null>(null);
   const [paymentId, setPaymentId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [redirecting, setRedirecting] = useState(false);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    const parseParams = async () => {
+    const fetchPaymentDetails = async () => {
       const resolvedParams = await params;
       const pathParams = resolvedParams.params;
 
-      if (pathParams.length >= 3) {
-        const amountStr = pathParams[0].replace("$", "");
-        const recipientEmail = pathParams[2];
+      // Get payment ID from query params
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get("id");
 
-        setAmount(amountStr);
-        setRecipient(recipientEmail);
-
-        // Get payment ID from query params
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get("id");
-
-        if (id) {
-          setPaymentId(id);
-        }
+      if (!id) {
+        setError("Payment ID not found");
+        setLoading(false);
+        return;
       }
 
+      setPaymentId(id);
+
+      // Fetch payment details from database
+      const result = await safeFetch<{
+        amount: number;
+        recipientEmail: string;
+        token: string;
+      }>(`/api/payments/${id}`);
+
+      if (result.error || !result.data) {
+        setError(result.error || "Failed to load payment details");
+        setLoading(false);
+        return;
+      }
+
+      setPayment({
+        amount: result.data.amount,
+        recipientEmail: result.data.recipientEmail,
+        token: result.data.token || "APT",
+      });
       setLoading(false);
     };
 
-    parseParams();
+    fetchPaymentDetails();
   }, [params]);
 
   const handleClaimPayment = () => {
@@ -77,7 +96,7 @@ export default function PaymentClaimPage({
     );
   }
 
-  if (!amount || !recipient) {
+  if (error || !payment) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -87,7 +106,7 @@ export default function PaymentClaimPage({
             </svg>
           </div>
           <h2 className="text-2xl font-semibold text-gunmetal mb-2">Invalid payment link</h2>
-          <p className="text-gunmetal/60">This payment link appears to be broken or expired.</p>
+          <p className="text-gunmetal/60">{error || "This payment link appears to be broken or expired."}</p>
         </div>
       </div>
     );
@@ -113,12 +132,20 @@ export default function PaymentClaimPage({
         <div className="bg-white border-2 border-lavender-web rounded-2xl p-8 shadow-sm">
           {/* Payment Amount Display */}
           <div className="text-center mb-8">
-            <p className="text-sm font-medium text-gunmetal/60 mb-2">You&apos;re receiving</p>
-            <div className="flex items-center justify-center">
-              <span className="text-5xl font-bold text-gunmetal">${amount}</span>
+            <p className="text-sm font-medium text-gunmetal/60 mb-2">You&apos;re paying</p>
+            <div className="flex items-center justify-center gap-3">
+              <Image
+                src={payment.token === 'APT' ? "/aptos-apt-logo.svg" : "/usd-coin-usdc-logo.svg"}
+                alt={payment.token}
+                width={48}
+                height={48}
+                className="w-12 h-12"
+              />
+              <span className="text-5xl font-bold text-gunmetal">{payment.amount}</span>
+              <span className="text-2xl font-semibold text-gunmetal/60">{payment.token}</span>
             </div>
             <p className="text-sm text-gunmetal/60 mt-3">
-              to <span className="font-medium text-gunmetal">{recipient}</span>
+              to <span className="font-medium text-gunmetal">{payment.recipientEmail}</span>
             </p>
           </div>
 

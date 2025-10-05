@@ -14,7 +14,7 @@ export default function SuccessAnimation({ message = "Success!", size = 120 }: S
       <div style={{ width: size, height: size }}>
         <Lottie
           animationData={successAnimation}
-          loop={false}
+          loop={true}
           autoplay={true}
           style={{ width: '100%', height: '100%' }}
         />

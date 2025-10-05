@@ -98,36 +98,11 @@ export default function AuthCallbackPage() {
         const paymentId = sessionStorage.getItem("payment_id");
 
         if (paymentId && decodedToken.email) {
-          // This is a payment claim - register recipient via API
-          setStatus("Registering payment claim...");
+          // This is a payment request - payer will execute payment
+          sessionStorage.removeItem("payment_id");
 
-          try {
-            const claimResponse = await fetch("/api/payments/claim", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                paymentId,
-                recipientEmail: decodedToken.email,
-                recipientAddress: keylessAccount.accountAddress.toString(),
-              }),
-            });
-
-            const claimData = await claimResponse.json();
-
-            if (!claimResponse.ok) {
-              throw new Error(claimData.error || "Failed to claim payment");
-            }
-
-            sessionStorage.removeItem("payment_id");
-
-            // Redirect to waiting page - payment is NOT complete yet!
-            router.push(`/claim/waiting?id=${paymentId}`);
-          } catch (claimError) {
-            console.error("Claim error:", claimError);
-            setError(claimError instanceof Error ? claimError.message : "Failed to claim payment");
-          }
+          // Redirect to payment execution page
+          router.push(`/pay/execute?id=${paymentId}`);
         } else {
           // Regular sign-in
           router.push("/dashboard");

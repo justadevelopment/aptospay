@@ -6,7 +6,7 @@ import { validatePaymentAmount } from "@/lib/validation";
 import { TokenSymbol, getSupportedTokens } from "@/lib/tokens";
 import { getKeylessAccount } from "@/lib/keyless";
 import { transfer, getBalance } from "@/lib/aptos";
-import TransactionLink from "./TransactionLink";
+import TransactionDialog from "./TransactionDialog";
 
 export default function Send() {
   const [sendAmount, setSendAmount] = useState("");
@@ -16,9 +16,14 @@ export default function Send() {
   const [sendLoading, setSendLoading] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userAddress, setUserAddress] = useState<string | null>(null);
-  const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
+
+  // Transaction Dialog State
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogStatus, setDialogStatus] = useState<"loading" | "success" | "error">("loading");
+  const [dialogTxHash, setDialogTxHash] = useState<string | null>(null);
+  const [dialogError, setDialogError] = useState<string>("");
 
   // Check authentication on mount
   useEffect(() => {
@@ -76,6 +81,11 @@ export default function Send() {
       return;
     }
 
+    // Open dialog with loading state
+    setDialogOpen(true);
+    setDialogStatus("loading");
+    setDialogTxHash(null);
+    setDialogError("");
     setSendLoading(true);
     setSendErrors({});
 
@@ -84,7 +94,8 @@ export default function Send() {
       const keylessAccount = await getKeylessAccount();
 
       if (!keylessAccount) {
-        setSendErrors({ amount: "Please sign in again to send payments" });
+        setDialogStatus("error");
+        setDialogError("Please sign in again to send payments");
         setSendLoading(false);
         return;
       }
@@ -99,10 +110,19 @@ export default function Send() {
           body: JSON.stringify({ email: sendRecipient.trim() }),
         });
 
-        const resolveData = await resolveResponse.json();
+        let resolveData;
+        try {
+          resolveData = await resolveResponse.json();
+        } catch (jsonError) {
+          setDialogStatus("error");
+          setDialogError("Failed to resolve email address. Please try again.");
+          setSendLoading(false);
+          return;
+        }
 
         if (!resolveResponse.ok) {
-          setSendErrors({ recipient: resolveData.error });
+          setDialogStatus("error");
+          setDialogError(resolveData.error || "Failed to resolve email address");
           setSendLoading(false);
           return;
         }
@@ -118,18 +138,30 @@ export default function Send() {
         sendToken
       );
 
-      setSuccessTxHash(transactionHash);
+      // Show success in dialog
+      setDialogStatus("success");
+      setDialogTxHash(transactionHash);
       setSendAmount("");
       setSendRecipient("");
 
-      // Clear success message after 10 seconds
-      setTimeout(() => setSuccessTxHash(null), 10000);
+      // Refresh balance after successful transaction
+      if (userAddress) {
+        setTimeout(() => fetchBalance(userAddress, sendToken), 2000);
+      }
     } catch (error) {
       console.error("Send error:", error);
-      setSendErrors({ amount: error instanceof Error ? error.message : "Failed to send" });
+      setDialogStatus("error");
+      setDialogError(error instanceof Error ? error.message : "Failed to send transaction");
     } finally {
       setSendLoading(false);
     }
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setDialogStatus("loading");
+    setDialogTxHash(null);
+    setDialogError("");
   };
 
   return (
@@ -138,24 +170,6 @@ export default function Send() {
         <div className="absolute inset-0 bg-gradient-to-br from-columbia-blue/5 via-transparent to-teal/10 opacity-60"></div>
         <div className="relative z-10">
           <h3 className="text-xs font-semibold text-gunmetal mb-4 uppercase tracking-wide">Send</h3>
-
-          {/* Success Message */}
-          {successTxHash && (
-            <div className="mb-4 p-3 bg-teal/5 border-2 border-teal/30 rounded-lg">
-              <div className="flex items-start gap-2">
-                <div className="flex-shrink-0 w-5 h-5 bg-teal/10 rounded-full flex items-center justify-center mt-0.5">
-                  <svg className="w-3 h-3 text-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gunmetal mb-1">✅ Sent successfully!</p>
-                  <p className="text-[9px] text-gunmetal/60 uppercase tracking-wide mb-1">Transaction Hash</p>
-                  <TransactionLink txHash={successTxHash} className="text-[10px]" />
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="space-y-3 flex-1 flex flex-col">
             {/* Token Selector */}
@@ -301,6 +315,16 @@ export default function Send() {
           </div>
         </div>
       </div>
+
+      {/* Transaction Dialog */}
+      <TransactionDialog
+        isOpen={dialogOpen}
+        onClose={handleCloseDialog}
+        status={dialogStatus}
+        txHash={dialogTxHash}
+        errorMessage={dialogError}
+        network="testnet"
+      />
     </div>
   );
 }

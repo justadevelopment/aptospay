@@ -13,7 +13,23 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const prisma = await getPrisma();
+    if (!id) {
+      return NextResponse.json(
+        { error: "Payment ID is required" },
+        { status: 400 }
+      );
+    }
+
+    let prisma;
+    try {
+      prisma = await getPrisma();
+    } catch (dbError) {
+      console.error("Database connection error:", dbError);
+      return NextResponse.json(
+        { error: "Database connection failed. Please try again." },
+        { status: 503 }
+      );
+    }
 
     if (!prisma) {
       return NextResponse.json(
@@ -39,6 +55,7 @@ export async function GET(
       recipientEmail: payment.recipientEmail,
       senderAddress: payment.senderAddress || null,
       recipientAddress: payment.recipientAddress || null,
+      token: payment.token || "APT",
       status: payment.status,
       transactionHash: payment.transactionHash || null,
       createdAt: payment.createdAt.toISOString(),
