@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { validatePaymentAmount } from "@/lib/validation";
 import { TokenSymbol, getSupportedTokens } from "@/lib/tokens";
 import { getKeylessAccount } from "@/lib/keyless";
-import { transfer } from "@/lib/aptos";
+import { transfer, getBalance } from "@/lib/aptos";
 import TransactionLink from "./TransactionLink";
 
 export default function Send() {
@@ -16,6 +17,8 @@ export default function Send() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userAddress, setUserAddress] = useState<string | null>(null);
   const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
+  const [loadingBalance, setLoadingBalance] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -23,7 +26,30 @@ export default function Send() {
     const address = sessionStorage.getItem("aptos_address");
     setUserEmail(email);
     setUserAddress(address);
+    if (address) {
+      fetchBalance(address, sendToken);
+    }
   }, []);
+
+  // Fetch balance when token changes
+  useEffect(() => {
+    if (userAddress) {
+      fetchBalance(userAddress, sendToken);
+    }
+  }, [sendToken, userAddress]);
+
+  const fetchBalance = async (address: string, token: TokenSymbol) => {
+    setLoadingBalance(true);
+    try {
+      const tokenBalance = await getBalance(address, token);
+      setBalance(tokenBalance);
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      setBalance(0);
+    } finally {
+      setLoadingBalance(false);
+    }
+  };
 
   const handleSend = async () => {
     // Check if signed in
@@ -153,6 +179,29 @@ export default function Send() {
                   </button>
                 ))}
               </div>
+
+              {/* Balance Display - Small */}
+              {userAddress && (
+                <div className="mt-2 flex items-center justify-between px-2 py-1.5 bg-gunmetal/5 rounded-lg">
+                  <span className="text-[9px] text-gunmetal/60 uppercase tracking-wide">Available</span>
+                  <div className="flex items-center gap-1.5">
+                    <Image
+                      src={sendToken === 'APT' ? "/aptos-apt-logo.svg" : "/usd-coin-usdc-logo.svg"}
+                      alt={sendToken}
+                      width={14}
+                      height={14}
+                      className="w-3.5 h-3.5"
+                    />
+                    {loadingBalance ? (
+                      <div className="w-16 h-3 bg-gunmetal/10 animate-pulse rounded"></div>
+                    ) : (
+                      <span className="text-xs font-bold text-gunmetal">
+                        {balance !== null ? `${balance.toFixed(4)} ${sendToken}` : `-.-- ${sendToken}`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Amount Input */}

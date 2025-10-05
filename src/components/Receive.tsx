@@ -32,15 +32,22 @@ export default function Receive({ showPaymentLink = true }: ReceiveProps) {
     if (email && address) {
       setUserEmail(email);
       setUserAddress(address);
-      fetchBalance(address);
+      fetchBalance(address, receiveToken);
     }
   }, []);
 
-  const fetchBalance = async (address: string) => {
+  // Fetch balance when token changes
+  useEffect(() => {
+    if (userAddress) {
+      fetchBalance(userAddress, receiveToken);
+    }
+  }, [receiveToken, userAddress]);
+
+  const fetchBalance = async (address: string, token: TokenSymbol) => {
     setLoadingBalance(true);
     try {
-      const aptBalance = await getBalance(address, 'APT');
-      setBalance(aptBalance);
+      const tokenBalance = await getBalance(address, token);
+      setBalance(tokenBalance);
     } catch (error) {
       console.error("Error fetching balance:", error);
       setBalance(0);
@@ -151,8 +158,8 @@ export default function Receive({ showPaymentLink = true }: ReceiveProps) {
                   <div className="flex items-center justify-between mb-0.5">
                     <p className="text-[9px] text-gunmetal/60 uppercase tracking-wide">Balance</p>
                     <Image
-                      src="/aptos-apt-logo.svg"
-                      alt="APT"
+                      src={receiveToken === 'APT' ? "/aptos-apt-logo.svg" : "/usd-coin-usdc-logo.svg"}
+                      alt={receiveToken}
                       width={16}
                       height={16}
                       className="w-4 h-4 opacity-50"
@@ -162,7 +169,7 @@ export default function Receive({ showPaymentLink = true }: ReceiveProps) {
                     <div className="w-20 h-5 bg-lavender-web animate-pulse rounded"></div>
                   ) : (
                     <p className="text-xl font-bold text-teal">
-                      {balance !== null ? `${balance.toFixed(4)} APT` : "-.-- APT"}
+                      {balance !== null ? `${balance.toFixed(4)} ${receiveToken}` : `-.-- ${receiveToken}`}
                     </p>
                   )}
                 </div>
