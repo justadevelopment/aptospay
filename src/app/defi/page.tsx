@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
+import Header from "@/components/Header";
 import { getKeylessAccount } from "@/lib/keyless";
 import TransactionLink from "@/components/TransactionLink";
 import {
@@ -72,31 +71,8 @@ export default function DeFiPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="border-b border-lavender-web">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <Image
-                src="/aptfy.png"
-                alt="Aptfy Logo"
-                width={28}
-                height={28}
-                className="h-7 w-7"
-                priority
-              />
-              <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptfy</span>
-            </Link>
-
-            <Link
-              href="/dashboard"
-              className="text-sm font-medium text-gunmetal/60 hover:text-gunmetal transition-colors"
-            >
-              ← Back to Dashboard
-            </Link>
-          </div>
-        </div>
-      </nav>
+      {/* Reusable Header Component */}
+      <Header />
 
       <main className="container mx-auto px-6 py-12 max-w-6xl">
         {/* Header */}

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import Header from "@/components/Header";
 import { getBalance } from "@/lib/aptos";
 import { formatAmount } from "@/lib/tokens";
 import TransactionHistory from "@/components/TransactionHistory";
@@ -76,34 +77,8 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="border-b border-lavender-web">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/aptfy.png"
-                alt="Aptfy Logo"
-                width={28}
-                height={28}
-                className="h-7 w-7"
-                priority
-              />
-              <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptfy</span>
-            </Link>
-
-            <button
-              onClick={() => {
-                sessionStorage.clear();
-                router.push("/");
-              }}
-              className="text-sm font-medium text-gunmetal/60 hover:text-gunmetal transition-colors"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </nav>
+      {/* Reusable Header Component */}
+      <Header />
 
       <main className="container mx-auto px-6 py-12 max-w-6xl">
         {/* Header with Mascot */}
