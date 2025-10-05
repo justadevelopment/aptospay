@@ -36,7 +36,7 @@ export function validateEmail(email: string): ValidationResult {
 }
 
 // Payment amount validation
-export function validatePaymentAmount(amount: string | number): ValidationResult {
+export function validatePaymentAmount(amount: string | number, token?: string): ValidationResult {
   if (amount === '' || amount === null || amount === undefined) {
     return { isValid: false, error: "Amount is required" };
   }
@@ -52,13 +52,22 @@ export function validatePaymentAmount(amount: string | number): ValidationResult
   }
 
   if (numAmount > 1000000) {
-    return { isValid: false, error: "Amount exceeds maximum limit of $1,000,000" };
+    return { isValid: false, error: "Amount exceeds maximum limit of 1,000,000" };
   }
 
-  // Check decimal places (max 2 for USD)
+  // Check decimal places based on token
+  // APT: 8 decimals, USDC: 6 decimals, default: 8 decimals for crypto
+  let maxDecimals = 8; // Default for APT and other crypto
+  if (token === 'USDC') {
+    maxDecimals = 6;
+  }
+
   const decimalPlaces = (amount.toString().split('.')[1] || '').length;
-  if (decimalPlaces > 2) {
-    return { isValid: false, error: "Amount can have maximum 2 decimal places" };
+  if (decimalPlaces > maxDecimals) {
+    return {
+      isValid: false,
+      error: `Amount can have maximum ${maxDecimals} decimal places for ${token || 'this token'}`
+    };
   }
 
   return { isValid: true };

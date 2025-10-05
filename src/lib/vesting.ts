@@ -147,8 +147,8 @@ export async function getStreamDetails(streamId: number): Promise<VestingStream 
       cliff_time: parseInt(cliff_time as string),
       cancelled: cancelled as boolean,
     };
-  } catch (_error) {
-    console.error(`Stream ${streamId} not found:`, _error);
+  } catch (error) {
+    console.error(`Stream ${streamId} not found:`, error);
     return null;
   }
 }
@@ -166,8 +166,8 @@ export async function calculateVestedAmount(streamId: number): Promise<number> {
     });
 
     return parseInt(result[0] as string);
-  } catch (_error) {
-    console.error("Error calculating vested amount:", _error);
+  } catch (error) {
+    console.error("Error calculating vested amount:", error);
     return 0;
   }
 }
@@ -185,8 +185,8 @@ export async function calculateClaimableAmount(streamId: number): Promise<number
     });
 
     return parseInt(result[0] as string);
-  } catch (_error) {
-    console.error("Error calculating claimable amount:", _error);
+  } catch (error) {
+    console.error("Error calculating claimable amount:", error);
     return 0;
   }
 }
@@ -228,8 +228,8 @@ export async function getRegistryStats(): Promise<RegistryStats> {
       total_cancelled: parseInt(total_cancelled as string),
       total_volume: parseInt(total_volume as string),
     };
-  } catch (_error) {
-    console.error("Error fetching registry stats:", _error);
+  } catch (error) {
+    console.error("Error fetching registry stats:", error);
     return {
       total_streams: 0,
       total_completed: 0,

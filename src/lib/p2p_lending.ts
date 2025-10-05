@@ -247,158 +247,149 @@ export async function updatePriceOracle(
 
 /**
  * Check if lending pool exists
+ * Note: Uses resource check since pool_exists() is not a view function in deployed contract
  */
 export async function poolExists(): Promise<boolean> {
   try {
-    const result = await aptos.view({
-      payload: {
-        function: `${LENDING_CONTRACT_ADDRESS}::p2p_lending::pool_exists`,
-        functionArguments: [],
-      },
+    await aptos.getAccountResource({
+      accountAddress: LENDING_CONTRACT_ADDRESS,
+      resourceType: `${LENDING_CONTRACT_ADDRESS}::p2p_lending::LendingPool`,
     });
-    return result[0] as boolean;
-  } catch (error) {
-    console.error("Error checking pool existence:", error);
+    return true;
+  } catch {
     return false;
   }
 }
 
 /**
  * Get lending pool details
+ * Note: Fetches resource directly since get_pool_details() is not a view function in deployed contract
  */
 export async function getPoolDetails(): Promise<LendingPoolDetails | null> {
   try {
-    const result = await aptos.view({
-      payload: {
-        function: `${LENDING_CONTRACT_ADDRESS}::p2p_lending::get_pool_details`,
-        functionArguments: [],
-      },
+    const resource = await aptos.getAccountResource({
+      accountAddress: LENDING_CONTRACT_ADDRESS,
+      resourceType: `${LENDING_CONTRACT_ADDRESS}::p2p_lending::LendingPool`,
     });
 
-    return {
-      total_liquidity: Number(result[0]),
-      total_borrowed: Number(result[1]),
-      current_borrow_rate: Number(result[2]),
-      current_supply_rate: Number(result[3]),
-      borrow_index: String(result[4]),
-      supply_index: String(result[5]),
+    const data = resource.data as {
+      pool_coins: number;
+      total_borrowed: number;
+      borrow_rate: number;
+      supply_rate: number;
+      borrow_index: string;
+      supply_index: string;
     };
-  } catch (error) {
-    console.error("Error fetching pool details:", error);
+
+    return {
+      total_liquidity: Number(data.pool_coins),
+      total_borrowed: Number(data.total_borrowed),
+      current_borrow_rate: Number(data.borrow_rate),
+      current_supply_rate: Number(data.supply_rate),
+      borrow_index: String(data.borrow_index),
+      supply_index: String(data.supply_index),
+    };
+  } catch {
     return null;
   }
 }
 
 /**
  * Get user position details
+ * Note: Returns null because positions are stored in a Table and get_position_details() is not a view function
+ * This is a known limitation of the deployed contract - positions cannot be queried from frontend
  */
 export async function getPositionDetails(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   userAddress: string
 ): Promise<UserPosition | null> {
-  try {
-    const result = await aptos.view({
-      payload: {
-        function: `${LENDING_CONTRACT_ADDRESS}::p2p_lending::get_position_details`,
-        functionArguments: [userAddress],
-      },
-    });
-
-    return {
-      supplied_amount: Number(result[0]),
-      borrowed_amount: Number(result[1]),
-      collateral_amount: Number(result[2]),
-      health_factor: String(result[3]),
-    };
-  } catch {
-    // User doesn't have a position yet
-    return null;
-  }
+  // Position data is stored in a Table inside PositionRegistry resource
+  // Without a view function, we cannot access table entries from the frontend
+  // This would need contract redeployment with #[view] attributes
+  return null;
 }
 
 /**
  * Check if user has a position
+ * Note: Checks by attempting to fetch position details since position_exists() is not a view function
  */
 export async function positionExists(userAddress: string): Promise<boolean> {
-  try {
-    const result = await aptos.view({
-      payload: {
-        function: `${LENDING_CONTRACT_ADDRESS}::p2p_lending::position_exists`,
-        functionArguments: [userAddress],
-      },
-    });
-    return result[0] as boolean;
-  } catch (error) {
-    console.error("Error checking position existence:", error);
-    return false;
-  }
+  const position = await getPositionDetails(userAddress);
+  return position !== null && (
+    position.supplied_amount > 0 ||
+    position.borrowed_amount > 0 ||
+    position.collateral_amount > 0
+  );
 }
 
 /**
  * Get current prices from oracle
+ * Note: Fetches resource directly since get_prices() is not a view function in deployed contract
  */
 export async function getPrices(): Promise<PriceInfo | null> {
   try {
-    const result = await aptos.view({
-      payload: {
-        function: `${LENDING_CONTRACT_ADDRESS}::p2p_lending::get_prices`,
-        functionArguments: [],
-      },
+    const resource = await aptos.getAccountResource({
+      accountAddress: LENDING_CONTRACT_ADDRESS,
+      resourceType: `${LENDING_CONTRACT_ADDRESS}::p2p_lending::PriceOracle`,
     });
 
-    return {
-      apt_price: Number(result[0]),
-      usdc_price: Number(result[1]),
-      last_update: Number(result[2]),
+    const data = resource.data as {
+      apt_price: number;
+      usdc_price: number;
+      last_update: number;
     };
-  } catch (error) {
-    console.error("Error fetching prices:", error);
+
+    return {
+      apt_price: Number(data.apt_price),
+      usdc_price: Number(data.usdc_price),
+      last_update: Number(data.last_update),
+    };
+  } catch {
     return null;
   }
 }
 
 /**
  * Get registry statistics
+ * Note: Fetches resource directly since get_registry_stats() is not a view function in deployed contract
  */
 export async function getRegistryStats(): Promise<RegistryStats | null> {
   try {
-    const result = await aptos.view({
-      payload: {
-        function: `${LENDING_CONTRACT_ADDRESS}::p2p_lending::get_registry_stats`,
-        functionArguments: [],
-      },
+    const resource = await aptos.getAccountResource({
+      accountAddress: LENDING_CONTRACT_ADDRESS,
+      resourceType: `${LENDING_CONTRACT_ADDRESS}::p2p_lending::LendingRegistry`,
     });
 
-    return {
-      total_pools: Number(result[0]),
-      total_volume_supplied: String(result[1]),
-      total_volume_borrowed: String(result[2]),
-      total_liquidations: Number(result[3]),
+    const data = resource.data as {
+      total_pools: number;
+      total_volume_supplied: string;
+      total_volume_borrowed: string;
+      total_liquidations: number;
     };
-  } catch (error) {
-    console.error("Error fetching registry stats:", error);
+
+    return {
+      total_pools: Number(data.total_pools),
+      total_volume_supplied: String(data.total_volume_supplied),
+      total_volume_borrowed: String(data.total_volume_borrowed),
+      total_liquidations: Number(data.total_liquidations),
+    };
+  } catch {
     return null;
   }
 }
 
 /**
  * Calculate health factor for a user
+ * Note: Returns null because calculate_health_factor() is not a view function and positions are in a Table
+ * This is a known limitation of the deployed contract
  */
 export async function calculateHealthFactor(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   userAddress: string
 ): Promise<string | null> {
-  try {
-    const result = await aptos.view({
-      payload: {
-        function: `${LENDING_CONTRACT_ADDRESS}::p2p_lending::calculate_health_factor`,
-        functionArguments: [userAddress],
-      },
-    });
-
-    return String(result[0]);
-  } catch (error) {
-    console.error("Error calculating health factor:", error);
-    return null;
-  }
+  // Cannot calculate health factor without view function or direct position access
+  // Position data is stored in a Table which cannot be queried from frontend
+  return null;
 }
 
 /**

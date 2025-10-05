@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { getKeylessAccount } from "@/lib/keyless";
+import { transfer } from "@/lib/aptos";
+import { TokenSymbol } from "@/lib/tokens";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -66,40 +69,48 @@ export default function SendPaymentPage({
   const executeTransfer = async () => {
     if (!payment) return;
 
-    // Check if user has credentials
-    const jwt = sessionStorage.getItem("jwt_token");
-    const ephemeralKeyPairStr = sessionStorage.getItem("ephemeral_keypair");
-
-    if (!jwt || !ephemeralKeyPairStr) {
-      setError("Please sign in first to execute the transfer");
-      router.push("/");
-      return;
-    }
-
     setExecuting(true);
     setError("");
 
     try {
-      const response = await fetch("/api/payments/execute", {
+      // Get keyless account from client-side storage
+      const keylessAccount = await getKeylessAccount();
+
+      if (!keylessAccount) {
+        setError("Please sign in first to execute the transfer");
+        router.push("/");
+        return;
+      }
+
+      if (!payment.recipientAddress) {
+        throw new Error("Recipient address not found");
+      }
+
+      const token = (payment.token as TokenSymbol) || 'APT';
+
+      // Execute transfer directly from client
+      const transactionHash = await transfer(
+        keylessAccount,
+        payment.recipientAddress,
+        payment.amount,
+        token
+      );
+
+      // Update database with transaction hash
+      await fetch("/api/payments/update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           paymentId: payment.id,
-          jwt,
-          ephemeralKeyPairStr,
+          transactionHash,
+          status: "claimed",
         }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to execute transfer");
-      }
-
       // Redirect to success page
-      alert(`Transaction successful! Hash: ${data.transactionHash}`);
+      alert(`Transaction successful! Hash: ${transactionHash}`);
       router.push("/dashboard");
     } catch (err) {
       console.error("Execute transfer error:", err);

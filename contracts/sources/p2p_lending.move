@@ -1050,12 +1050,14 @@ module aptospay::p2p_lending {
     // ======================== View Functions ========================
 
     /// Check if a pool exists
+    #[view]
     public fun pool_exists(): bool {
         exists<LendingPool>(@aptospay)
     }
 
     /// Get pool details
     /// Returns: (total_liquidity, total_borrowed, current_borrow_rate, current_supply_rate, borrow_index, supply_index)
+    #[view]
     public fun get_pool_details(): (u64, u64, u64, u64, u128, u128) acquires LendingPool {
         assert!(exists<LendingPool>(@aptospay), EPOOL_NOT_FOUND);
         let pool = borrow_global<LendingPool>(@aptospay);
@@ -1071,6 +1073,7 @@ module aptospay::p2p_lending {
 
     /// Get user position details
     /// Returns: (supplied_amount, borrowed_amount, collateral_amount, health_factor)
+    #[view]
     public fun get_position_details(user: address): (u64, u64, u64, u128) acquires PositionRegistry {
         let position_registry = borrow_global<PositionRegistry>(@aptospay);
         assert!(table::contains(&position_registry.positions, user), EPOSITION_NOT_FOUND);
@@ -1085,6 +1088,7 @@ module aptospay::p2p_lending {
     }
 
     /// Check if user has a position
+    #[view]
     public fun position_exists(user: address): bool acquires PositionRegistry {
         let position_registry = borrow_global<PositionRegistry>(@aptospay);
         table::contains(&position_registry.positions, user)
@@ -1092,6 +1096,7 @@ module aptospay::p2p_lending {
 
     /// Get current prices from oracle
     /// Returns: (apt_price, usdc_price, last_update)
+    #[view]
     public fun get_prices(): (u64, u64, u64) acquires PriceOracle {
         let oracle = borrow_global<PriceOracle>(@aptospay);
         (oracle.apt_price, oracle.usdc_price, oracle.last_update)
@@ -1099,6 +1104,7 @@ module aptospay::p2p_lending {
 
     /// Get registry statistics
     /// Returns: (total_pools, total_volume_supplied, total_volume_borrowed, total_liquidations)
+    #[view]
     public fun get_registry_stats(): (u64, u128, u128, u64) acquires LendingRegistry {
         let registry = borrow_global<LendingRegistry>(@aptospay);
         (
@@ -1110,6 +1116,7 @@ module aptospay::p2p_lending {
     }
 
     /// Calculate health factor for a user
+    #[view]
     public fun calculate_health_factor(user: address): u128 acquires PositionRegistry, PriceOracle {
         let position_registry = borrow_global<PositionRegistry>(@aptospay);
         assert!(table::contains(&position_registry.positions, user), EPOSITION_NOT_FOUND);

@@ -2,13 +2,14 @@
 
 Email-to-crypto payment system on Aptos. Send APT or USDC to anyone with an email—no wallet required. Recipients authenticate with Google OAuth and Aptos derives their account address deterministically.
 
+**DevNote**: I wanted to name the app Aptospay, but during some market research I found out that there is already an existing Aptospay, so I decided to change the name to Aptfy. There might still be some aptospay fragments in the code, aiming this will clear up confusion if so.
+
 **Contract Address**: `0x2b6848d433930a6cec8b474f9adcf2d58a1f5f88d5e17f8718a0a93737660efe`
 
-All four contracts deployed as modules under the same address:
-- **Vesting Stream**: [`0x045c65b5...8d9639`](https://explorer.aptoslabs.com/txn/0x045c65b5c3276d25b91a52242136442cbcf8d10a97c4c565e5102e982e8d9639?network=testnet)
+Three production smart contracts deployed as modules:
+- **Vesting Streams**: [`0x045c65b5...8d9639`](https://explorer.aptoslabs.com/txn/0x045c65b5c3276d25b91a52242136442cbcf8d10a97c4c565e5102e982e8d9639?network=testnet)
 - **Escrow V2**: [`0x51ae0b48...aac84a7`](https://explorer.aptoslabs.com/txn/0x51ae0b48fe9b9ef891ee93503dcf7e1caedfc9ec2307c1e35f337ca75aac84a7?network=testnet)
-- **P2P Lending**: Ready for deployment (NEW! 🔥)
-- **Payment Escrow**: Deployed to same address
+- **P2P Lending**: [`0x76819255...2e2b25`](https://explorer.aptoslabs.com/txn/0x76819255027768f41c8a7eeb5530a1f976c1a989aa5e645fc6c063f763b31881?network=testnet)
 
 ## Features
 
@@ -24,7 +25,7 @@ All four contracts deployed as modules under the same address:
 
 ### Smart Contracts (Aptos Move)
 
-Four deployed modules at `0x2b6848d433930a6cec8b474f9adcf2d58a1f5f88d5e17f8718a0a93737660efe`:
+Three production modules deployed at `0x2b6848d433930a6cec8b474f9adcf2d58a1f5f88d5e17f8718a0a93737660efe`:
 
 **1. Vesting Streams** (`vesting_stream.move`)
 - Deployment tx: `0x045c65b5c3276d25b91a52242136442cbcf8d10a97c4c565e5102e982e8d9639`
@@ -32,15 +33,14 @@ Four deployed modules at `0x2b6848d433930a6cec8b474f9adcf2d58a1f5f88d5e17f8718a0
 - Supports salary streaming (claim earned tokens anytime)
 - Sender can cancel stream and refund unvested tokens
 
-**2. Enhanced Escrow V2** (`escrow_v2.move`)
+**2. Escrow V2** (`escrow_v2.move`)
 - Deployment tx: `0x51ae0b48fe9b9ef891ee93503dcf7e1caedfc9ec2307c1e35f337ca75aac84a7`
 - Factory pattern creates 3 escrow types:
   - Standard: Basic lock/release/cancel
   - Time-Locked: Auto-release after deadline, auto-refund on expiry
   - Arbitrated: Third-party can resolve disputes
 
-**3. P2P Lending Protocol** (`p2p_lending.move`) **NEW! 🔥**
-- Status: Ready for deployment (100% test coverage)
+**3. P2P Lending Protocol** (`p2p_lending.move`)
 - Pool-based lending with over-collateralization
 - Dynamic interest rates: 0-110% APR based on utilization
 - Automated liquidations with 5% bonus
@@ -49,10 +49,6 @@ Four deployed modules at `0x2b6848d433930a6cec8b474f9adcf2d58a1f5f88d5e17f8718a0
   - Liquidation Threshold: 80%
   - Optimal Utilization: 80%
   - Reserve Factor: 10%
-
-**4. Payment Escrow** (`payment_escrow.move`)
-- Original escrow for simple payment holds
-- Backward compatible with V1
 
 ### Architecture
 
@@ -127,30 +123,35 @@ NEXT_PUBLIC_ESCROW_MODULE_ADDRESS=0x2b6848d433930a6cec8b474f9adcf2d58a1f5f88d5e1
    - **Arbitrated**: Add third-party arbitrator address
 4. Transaction locks funds on-chain
 
-### Using P2P Lending (NEW!)
+### Using P2P Lending
+**Pool Status**: ✅ Initialized and ready for use
+- Pool creation tx: [`0xdf843da6...b780092b`](https://explorer.aptoslabs.com/txn/0xdf843da6f37b6eb4ac524f9bffc6e9c3cf8aec2bddca273aa11820f9b780092b?network=testnet)
+- Oracle prices set: APT=$10.00, USDC=$1.00
+
 1. **Supply APT to Earn Interest**:
-   - Navigate to `/defi` → Lending tab
-   - Click "Supply"
-   - Enter amount to supply
-   - Earn dynamic interest based on pool utilization
+   - Navigate to `/defi` → P2P Lending tab
+   - Enter amount to supply in the Supply form
+   - Click "Supply APT" and sign transaction
+   - Earn dynamic interest rates (0-110% APR based on utilization)
 
 2. **Borrow APT**:
-   - Ensure you have APT for collateral
-   - Click "Borrow"
-   - Enter collateral amount and borrow amount
-   - Health factor must be > 1.0 (max 75% LTV)
-   - Monitor health factor to avoid liquidation
+   - Navigate to Borrow form
+   - Enter collateral amount (in APT)
+   - Enter borrow amount (max 75% LTV)
+   - Example: 20 APT collateral → can borrow up to 7.5 APT
+   - Click "Borrow" and sign transaction
+   - Monitor health factor (must stay > 1.0)
 
 3. **Repay Loan**:
-   - Click "Repay" on your active loan
-   - Enter amount to repay
-   - Reclaim collateral after full repayment
+   - Navigate to Repay form
+   - Enter amount to repay (partial or full)
+   - Click "Repay" and sign transaction
+   - Collateral released after full repayment
 
-4. **Liquidate Unhealthy Positions**:
-   - Browse positions with health factor < 1.0
-   - Click "Liquidate"
-   - Repay borrower's debt
-   - Receive 105% of repaid amount in collateral (5% bonus)
+4. **View Transactions**:
+   - All transactions verified on [Aptos Explorer](https://explorer.aptoslabs.com/?network=testnet)
+   - Pool statistics update in real-time
+   - Note: Position data display limited (see CLAUDE.md for details)
 
 ## Project Structure
 
@@ -210,7 +211,7 @@ aptos move test
 aptos move publish --named-addresses aptospay=default
 ```
 
-**Note**: In Aptos Move, all modules in a package deploy to a single account address. The four contracts (vesting_stream, escrow_v2, payment_escrow, p2p_lending) are separate modules under one address.
+**Note**: In Aptos Move, all modules in a package deploy to a single account address. The three production contracts (vesting_stream, escrow_v2, p2p_lending) are separate modules under one address.
 
 Gas cost: ~4,500 Octas (~$0.000045) per deployment transaction
 

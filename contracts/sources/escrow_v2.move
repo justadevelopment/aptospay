@@ -452,6 +452,7 @@ module aptospay::escrow_v2 {
     // ======================== View Functions ========================
 
     /// Check if an escrow exists
+    #[view]
     public fun escrow_exists(escrow_id: u64): bool acquires EscrowRegistryV2 {
         let registry = borrow_global<EscrowRegistryV2>(@aptospay);
         table::contains(&registry.escrows, escrow_id)
@@ -459,6 +460,7 @@ module aptospay::escrow_v2 {
 
     /// Get escrow details
     /// Returns: (escrow_type, sender, recipient, arbitrator, amount, release_time, expiry_time, released, cancelled)
+    #[view]
     public fun get_escrow_details(
         escrow_id: u64
     ): (u8, address, address, Option<address>, u64, u64, u64, bool, bool) acquires EscrowRegistryV2 {
@@ -480,6 +482,7 @@ module aptospay::escrow_v2 {
     }
 
     /// Check if escrow has expired
+    #[view]
     public fun is_expired(escrow_id: u64): bool acquires EscrowRegistryV2 {
         let registry = borrow_global<EscrowRegistryV2>(@aptospay);
         assert!(table::contains(&registry.escrows, escrow_id), EESCROW_NOT_FOUND);
@@ -494,6 +497,7 @@ module aptospay::escrow_v2 {
     }
 
     /// Check if escrow can be claimed (past release_time)
+    #[view]
     public fun is_claimable(escrow_id: u64): bool acquires EscrowRegistryV2 {
         let registry = borrow_global<EscrowRegistryV2>(@aptospay);
         assert!(table::contains(&registry.escrows, escrow_id), EESCROW_NOT_FOUND);
@@ -520,6 +524,7 @@ module aptospay::escrow_v2 {
     }
 
     /// Get registry statistics
+    #[view]
     public fun get_registry_stats(): (u64, u64, u64, u64, u64, u64, u64, u64) acquires EscrowRegistryV2 {
         let registry = borrow_global<EscrowRegistryV2>(@aptospay);
         (

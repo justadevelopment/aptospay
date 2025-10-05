@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { formatAmount } from "@/lib/tokens";
-import { EscrowDetails } from "@/lib/aptos";
+import { EscrowDetails, createEscrow, releaseEscrow, cancelEscrow, getEscrowDetails } from "@/lib/aptos";
+import { getKeylessAccount } from "@/lib/keyless";
 
 export default function EscrowPage() {
   const [address, setAddress] = useState<string>("");
@@ -44,32 +45,22 @@ export default function EscrowPage() {
     setCreateError("");
 
     try {
-      const jwt = sessionStorage.getItem("google_jwt");
-      const ephemeralKeyPairStr = sessionStorage.getItem("ephemeral_keypair");
+      // Get keyless account from client-side storage
+      const keylessAccount = await getKeylessAccount();
 
-      if (!jwt || !ephemeralKeyPairStr) {
+      if (!keylessAccount) {
         throw new Error("Please sign in again");
       }
 
-      const response = await fetch("/api/escrow/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipient,
-          amount: parseFloat(amount),
-          memo,
-          jwt,
-          ephemeralKeyPairStr,
-        }),
-      });
+      // Execute create escrow directly from client
+      const transactionHash = await createEscrow(
+        keylessAccount,
+        recipient,
+        parseFloat(amount),
+        memo
+      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create escrow");
-      }
-
-      alert(`✅ Escrow created successfully!\nTransaction: ${data.transactionHash}`);
+      alert(`✅ Escrow created successfully!\nTransaction: ${transactionHash}`);
       setRecipient("");
       setAmount("");
       setMemo("");
@@ -87,14 +78,14 @@ export default function EscrowPage() {
     setEscrowDetails(null);
 
     try {
-      const response = await fetch(`/api/escrow/${escrowId}`);
-      const data = await response.json();
+      // Fetch escrow details directly from blockchain
+      const details = await getEscrowDetails(parseInt(escrowId));
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch escrow");
+      if (!details) {
+        throw new Error("Escrow not found");
       }
 
-      setEscrowDetails(data.escrow);
+      setEscrowDetails(details);
     } catch (error) {
       alert(error instanceof Error ? error.message : "Failed to fetch escrow");
     } finally {
@@ -109,30 +100,20 @@ export default function EscrowPage() {
     setActionError("");
 
     try {
-      const jwt = sessionStorage.getItem("google_jwt");
-      const ephemeralKeyPairStr = sessionStorage.getItem("ephemeral_keypair");
+      // Get keyless account from client-side storage
+      const keylessAccount = await getKeylessAccount();
 
-      if (!jwt || !ephemeralKeyPairStr) {
+      if (!keylessAccount) {
         throw new Error("Please sign in again");
       }
 
-      const response = await fetch("/api/escrow/release", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          escrowId: escrowDetails.escrowId,
-          jwt,
-          ephemeralKeyPairStr,
-        }),
-      });
+      // Execute release escrow directly from client
+      const transactionHash = await releaseEscrow(
+        keylessAccount,
+        escrowDetails.escrowId
+      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to release escrow");
-      }
-
-      alert(`✅ Escrow released successfully!\nTransaction: ${data.transactionHash}`);
+      alert(`✅ Escrow released successfully!\nTransaction: ${transactionHash}`);
       setEscrowDetails(null);
       setEscrowId("");
     } catch (error) {
@@ -149,30 +130,20 @@ export default function EscrowPage() {
     setActionError("");
 
     try {
-      const jwt = sessionStorage.getItem("google_jwt");
-      const ephemeralKeyPairStr = sessionStorage.getItem("ephemeral_keypair");
+      // Get keyless account from client-side storage
+      const keylessAccount = await getKeylessAccount();
 
-      if (!jwt || !ephemeralKeyPairStr) {
+      if (!keylessAccount) {
         throw new Error("Please sign in again");
       }
 
-      const response = await fetch("/api/escrow/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          escrowId: escrowDetails.escrowId,
-          jwt,
-          ephemeralKeyPairStr,
-        }),
-      });
+      // Execute cancel escrow directly from client
+      const transactionHash = await cancelEscrow(
+        keylessAccount,
+        escrowDetails.escrowId
+      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to cancel escrow");
-      }
-
-      alert(`✅ Escrow cancelled successfully!\nTransaction: ${data.transactionHash}`);
+      alert(`✅ Escrow cancelled successfully!\nTransaction: ${transactionHash}`);
       setEscrowDetails(null);
       setEscrowId("");
     } catch (error) {

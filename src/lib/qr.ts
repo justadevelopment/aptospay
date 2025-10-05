@@ -60,7 +60,7 @@ export function generatePaymentRequest(params: {
   const base64 = Buffer.from(json).toString('base64');
 
   // Add protocol prefix for deep linking
-  return `aptospay://pay?data=${base64}`;
+  return `aptfy://pay?data=${base64}`;
 }
 
 /**
@@ -72,12 +72,12 @@ export function generatePaymentRequest(params: {
 export function parsePaymentRequest(qrData: string): PaymentRequest {
   try {
     // Check for protocol prefix
-    if (!qrData.startsWith('aptospay://pay?data=')) {
-      throw new Error('Invalid AptosPay QR code format');
+    if (!qrData.startsWith('aptfy://pay?data=')) {
+      throw new Error('Invalid Aptfy QR code format');
     }
 
     // Extract base64 data
-    const base64 = qrData.replace('aptospay://pay?data=', '');
+    const base64 = qrData.replace('aptfy://pay?data=', '');
 
     // Decode base64 to JSON
     const json = Buffer.from(base64, 'base64').toString('utf-8');
@@ -128,7 +128,7 @@ export function parsePaymentRequest(qrData: string): PaymentRequest {
 export function generateQRCodeURL(paymentRequest: PaymentRequest): string {
   const json = JSON.stringify(paymentRequest);
   const base64 = Buffer.from(json).toString('base64');
-  return `aptospay://pay?data=${base64}`;
+  return `aptfy://pay?data=${base64}`;
 }
 
 /**

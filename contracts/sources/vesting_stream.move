@@ -376,6 +376,7 @@ module aptospay::vesting_stream {
     // ======================== View Functions ========================
 
     /// Check if a stream exists
+    #[view]
     public fun stream_exists(stream_id: u64): bool acquires StreamRegistry {
         let registry = borrow_global<StreamRegistry>(@aptospay);
         table::contains(&registry.streams, stream_id)
@@ -383,6 +384,7 @@ module aptospay::vesting_stream {
 
     /// Get stream details
     /// Returns: (sender, recipient, total_amount, claimed_amount, start_time, end_time, cliff_time, cancelled)
+    #[view]
     public fun get_stream_details(
         stream_id: u64
     ): (address, address, u64, u64, u64, u64, u64, bool) acquires StreamRegistry {
@@ -403,6 +405,7 @@ module aptospay::vesting_stream {
     }
 
     /// Calculate how much has vested for a stream at current time
+    #[view]
     public fun calculate_vested_amount(stream_id: u64): u64 acquires StreamRegistry {
         let registry = borrow_global<StreamRegistry>(@aptospay);
         assert!(table::contains(&registry.streams, stream_id), ESTREAM_NOT_FOUND);
@@ -413,6 +416,7 @@ module aptospay::vesting_stream {
     }
 
     /// Calculate claimable amount (vested - claimed)
+    #[view]
     public fun calculate_claimable_amount(stream_id: u64): u64 acquires StreamRegistry {
         let registry = borrow_global<StreamRegistry>(@aptospay);
         assert!(table::contains(&registry.streams, stream_id), ESTREAM_NOT_FOUND);
@@ -432,6 +436,7 @@ module aptospay::vesting_stream {
 
     /// Get registry statistics
     /// Returns: (total_streams, total_completed, total_cancelled, total_volume)
+    #[view]
     public fun get_registry_stats(): (u64, u64, u64, u64) acquires StreamRegistry {
         let registry = borrow_global<StreamRegistry>(@aptospay);
         (

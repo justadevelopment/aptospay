@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { getKeylessAccount } from "@/lib/keyless";
+import TransactionLink from "@/components/TransactionLink";
 import {
   createVestingStream,
   claimVested,
@@ -330,6 +331,8 @@ function VestingStreamForm({ address }: { address: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [txHash, setTxHash] = useState("");
+  const [txHash, setTxHash] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -381,7 +384,8 @@ function VestingStreamForm({ address }: { address: string }) {
         cliffTimeUnix
       );
 
-      setSuccess(`Vesting stream created! Transaction: ${txHash.slice(0, 10)}...`);
+      setTxHash(txHash);
+      setSuccess("Vesting stream created successfully!");
 
       // Reset form
       setRecipient("");
@@ -478,9 +482,22 @@ function VestingStreamForm({ address }: { address: string }) {
         </div>
       )}
 
-      {success && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm">
-          {success}
+      {success && txHash && (
+        <div className="p-4 bg-teal/5 border-2 border-teal/30 rounded-xl">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-8 h-8 bg-teal/10 rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gunmetal mb-2">{success}</p>
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-gunmetal/60 uppercase tracking-wide">Transaction Hash</p>
+                <TransactionLink txHash={txHash} />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -711,6 +728,7 @@ function EscrowForm({ address }: { address: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [txHash, setTxHash] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -784,7 +802,8 @@ function EscrowForm({ address }: { address: string }) {
         );
       }
 
-      setSuccess(`Escrow created! Transaction: ${txHash.slice(0, 10)}...`);
+      setTxHash(txHash);
+      setSuccess("Escrow created successfully!");
 
       // Reset form
       setRecipient("");
@@ -958,9 +977,22 @@ function EscrowForm({ address }: { address: string }) {
         </div>
       )}
 
-      {success && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm">
-          {success}
+      {success && txHash && (
+        <div className="p-4 bg-teal/5 border-2 border-teal/30 rounded-xl">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-8 h-8 bg-teal/10 rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gunmetal mb-2">{success}</p>
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-gunmetal/60 uppercase tracking-wide">Transaction Hash</p>
+                <TransactionLink txHash={txHash} />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1475,6 +1507,7 @@ function SupplyForm({ address }: { address: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [txHash, setTxHash] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1494,7 +1527,8 @@ function SupplyForm({ address }: { address: string }) {
       }
 
       const txHash = await supplyApt(keylessAccount, amountNum);
-      setSuccess(`Successfully supplied ${amountNum} APT! Tx: ${txHash.slice(0, 10)}...`);
+      setTxHash(txHash);
+      setSuccess(`Successfully supplied ${amountNum} APT!`);
       setAmount("");
 
       setTimeout(() => window.location.reload(), 2000);
@@ -1566,6 +1600,7 @@ function WithdrawForm({ address }: { address: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [txHash, setTxHash] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1585,7 +1620,8 @@ function WithdrawForm({ address }: { address: string }) {
       }
 
       const txHash = await withdrawApt(keylessAccount, amountNum);
-      setSuccess(`Successfully withdrawn ${amountNum} APT! Tx: ${txHash.slice(0, 10)}...`);
+      setTxHash(txHash);
+      setSuccess(`Successfully withdrawn ${amountNum} APT!`);
       setAmount("");
 
       setTimeout(() => window.location.reload(), 2000);
@@ -1658,6 +1694,7 @@ function BorrowForm({ address }: { address: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [txHash, setTxHash] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1688,7 +1725,8 @@ function BorrowForm({ address }: { address: string }) {
       }
 
       const txHash = await borrowApt(keylessAccount, collateralNum, borrowNum);
-      setSuccess(`Successfully borrowed ${borrowNum} APT! Tx: ${txHash.slice(0, 10)}...`);
+      setTxHash(txHash);
+      setSuccess(`Successfully borrowed ${borrowNum} APT!`);
       setCollateralAmount("");
       setBorrowAmount("");
 
@@ -1793,6 +1831,7 @@ function RepayForm({ address }: { address: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [txHash, setTxHash] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1812,7 +1851,8 @@ function RepayForm({ address }: { address: string }) {
       }
 
       const txHash = await repayApt(keylessAccount, amountNum);
-      setSuccess(`Successfully repaid ${amountNum} APT! Tx: ${txHash.slice(0, 10)}...`);
+      setTxHash(txHash);
+      setSuccess(`Successfully repaid ${amountNum} APT!`);
       setAmount("");
 
       setTimeout(() => window.location.reload(), 2000);

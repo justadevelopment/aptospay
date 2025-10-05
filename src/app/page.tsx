@@ -5,9 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { validatePaymentAmount, sanitizeInput } from "@/lib/validation";
-import { generateEphemeralKeyPair, storeEphemeralKeyPair, createGoogleAuthUrl } from "@/lib/keyless";
+import { generateEphemeralKeyPair, storeEphemeralKeyPair, createGoogleAuthUrl, getKeylessAccount } from "@/lib/keyless";
 import { TokenSymbol, getSupportedTokens } from "@/lib/tokens";
-import { getBalance } from "@/lib/aptos";
+import { getBalance, transfer } from "@/lib/aptos";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -18,14 +18,22 @@ import "@fontsource/outfit/600.css";
 import "@fontsource/outfit/700.css";
 
 export default function Home() {
-  const [amount, setAmount] = useState("");
-  const [recipient, setRecipient] = useState("");
-  const [receiveToken, setReceiveToken] = useState<TokenSymbol>("APT"); // For Receive section
-  const [sendToken, setSendToken] = useState<TokenSymbol>("APT"); // For Send section
+  // Separate state for Send component
+  const [sendAmount, setSendAmount] = useState("");
+  const [sendRecipient, setSendRecipient] = useState("");
+  const [sendToken, setSendToken] = useState<TokenSymbol>("APT");
+  const [sendErrors, setSendErrors] = useState<{ amount?: string; recipient?: string }>({});
+  const [sendLoading, setSendLoading] = useState(false);
+
+  // Separate state for Receive component
+  const [receiveAmount, setReceiveAmount] = useState("");
+  const [receiveRecipient, setReceiveRecipient] = useState("");
+  const [receiveToken, setReceiveToken] = useState<TokenSymbol>("APT");
+  const [receiveErrors, setReceiveErrors] = useState<{ amount?: string; recipient?: string }>({});
+  const [receiveLoading, setReceiveLoading] = useState(false);
+
   const [paymentLink, setPaymentLink] = useState("");
   const [copied, setCopied] = useState(false);
-  const [errors, setErrors] = useState<{ amount?: string; recipient?: string }>({});
-  const [loading, setLoading] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userAddress, setUserAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
@@ -84,17 +92,17 @@ export default function Home() {
   const generatePaymentLink = async () => {
     // Check if user is signed in
     if (!userEmail || !userAddress) {
-      setErrors({ amount: "Please sign in to create payment links" });
+      setReceiveErrors({ amount: "Please sign in to create payment links" });
       return;
     }
 
     // Reset errors
-    setErrors({});
-    setLoading(true);
+    setReceiveErrors({});
+    setReceiveLoading(true);
 
     try {
       // Validate amount
-      const amountValidation = validatePaymentAmount(amount);
+      const amountValidation = validatePaymentAmount(receiveAmount, receiveToken);
       const newErrors: { amount?: string; recipient?: string } = {};
 
       if (!amountValidation.isValid) {
@@ -105,30 +113,30 @@ export default function Home() {
       const aptosAddressRegex = /^0x[a-fA-F0-9]{64}$/;
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-      const isAddress = aptosAddressRegex.test(recipient.trim());
-      const isEmail = emailRegex.test(recipient.trim());
+      const isAddress = aptosAddressRegex.test(receiveRecipient.trim());
+      const isEmail = emailRegex.test(receiveRecipient.trim());
 
       if (!isAddress && !isEmail) {
         newErrors.recipient = "Enter a valid email or Aptos address (0x...)";
       }
 
       if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        setLoading(false);
+        setReceiveErrors(newErrors);
+        setReceiveLoading(false);
         return;
       }
 
       // Sanitize inputs
-      const sanitizedAmount = sanitizeInput(amount);
-      const sanitizedRecipient = sanitizeInput(recipient).toLowerCase();
+      const sanitizedAmount = sanitizeInput(receiveAmount);
+      const sanitizedRecipient = sanitizeInput(receiveRecipient).toLowerCase();
 
       // Get sender address if logged in
       const senderAddress = sessionStorage.getItem("aptos_address") || undefined;
 
       // If address is provided, send directly (TODO: implement direct transfer)
       if (isAddress) {
-        setErrors({ recipient: "Direct address transfers coming soon. Use email for now." });
-        setLoading(false);
+        setReceiveErrors({ recipient: "Direct address transfers coming soon. Use email for now." });
+        setReceiveLoading(false);
         return;
       }
 
@@ -148,17 +156,17 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok) {
-        setErrors({ amount: data.error || "Failed to create payment" });
-        setLoading(false);
+        setReceiveErrors({ amount: data.error || "Failed to create payment" });
+        setReceiveLoading(false);
         return;
       }
 
       setPaymentLink(data.paymentUrl);
     } catch (error) {
       console.error("Error creating payment:", error);
-      setErrors({ amount: "Failed to create payment link. Please try again." });
+      setReceiveErrors({ amount: "Failed to create payment link. Please try again." });
     } finally {
-      setLoading(false);
+      setReceiveLoading(false);
     }
   };
 
@@ -376,17 +384,17 @@ export default function Home() {
                         <div className="relative">
                           <input
                             type="number"
-                            value={amount}
+                            value={receiveAmount}
                             onChange={(e) => {
-                              setAmount(e.target.value);
-                              if (errors.amount) setErrors({ ...errors, amount: undefined });
+                              setReceiveAmount(e.target.value);
+                              if (receiveErrors.amount) setReceiveErrors({ ...receiveErrors, amount: undefined });
                             }}
                             placeholder="0.00"
                             step={receiveToken === 'USDC' ? "0.000001" : "0.00000001"}
                             min="0.000001"
                             max="1000000"
                             className={`w-full pl-3 pr-12 py-2 text-sm border-2 rounded-lg focus:outline-none transition-colors ${
-                              errors.amount
+                              receiveErrors.amount
                                 ? 'border-red-400 focus:border-red-500'
                                 : 'border-lavender-web focus:border-teal'
                             }`}
@@ -395,8 +403,8 @@ export default function Home() {
                             {receiveToken}
                           </span>
                         </div>
-                        {errors.amount && (
-                          <p className="text-red-500 text-[9px] mt-0.5">{errors.amount}</p>
+                        {receiveErrors.amount && (
+                          <p className="text-red-500 text-[9px] mt-0.5">{receiveErrors.amount}</p>
                         )}
                       </div>
 
@@ -407,40 +415,40 @@ export default function Home() {
                         </label>
                         <input
                           type="email"
-                          value={recipient}
+                          value={receiveRecipient}
                           onChange={(e) => {
-                            setRecipient(e.target.value);
-                            if (errors.recipient) setErrors({ ...errors, recipient: undefined });
+                            setReceiveRecipient(e.target.value);
+                            if (receiveErrors.recipient) setReceiveErrors({ ...receiveErrors, recipient: undefined });
                           }}
                           placeholder="alice@example.com"
                           className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-colors ${
-                            errors.recipient
+                            receiveErrors.recipient
                               ? 'border-red-400 focus:border-red-500'
                               : 'border-lavender-web focus:border-teal'
                           }`}
                         />
-                        {errors.recipient && (
-                          <p className="text-red-500 text-[9px] mt-0.5">{errors.recipient}</p>
+                        {receiveErrors.recipient && (
+                          <p className="text-red-500 text-[9px] mt-0.5">{receiveErrors.recipient}</p>
                         )}
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 mt-auto">
                         <button
                           onClick={generatePaymentLink}
-                          disabled={!amount || !recipient || loading}
+                          disabled={!receiveAmount || !receiveRecipient || receiveLoading}
                           className="py-2.5 bg-gunmetal text-white rounded-lg font-semibold text-xs hover:bg-gunmetal/90 disabled:bg-lavender-web disabled:text-gunmetal/30 transition-all flex items-center justify-center space-x-1"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                           </svg>
-                          <span>{loading ? "Creating..." : "Generate Link"}</span>
+                          <span>{receiveLoading ? "Creating..." : "Generate Link"}</span>
                         </button>
                         <button
                           onClick={async () => {
                             // TODO: Implement QR code generation
                             alert("QR code generation coming soon!");
                           }}
-                          disabled={!amount || !recipient || loading}
+                          disabled={!receiveAmount || !receiveRecipient || receiveLoading}
                           className="py-2.5 bg-teal text-white rounded-lg font-semibold text-xs hover:bg-teal/90 disabled:bg-lavender-web disabled:text-gunmetal/30 transition-all flex items-center justify-center space-x-1"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -513,17 +521,17 @@ export default function Home() {
                 <div className="relative">
                   <input
                     type="number"
-                    value={amount}
+                    value={sendAmount}
                     onChange={(e) => {
-                      setAmount(e.target.value);
-                      if (errors.amount) setErrors({ ...errors, amount: undefined });
+                      setSendAmount(e.target.value);
+                      if (sendErrors.amount) setSendErrors({ ...sendErrors, amount: undefined });
                     }}
                     placeholder="0.00"
                     step={sendToken === 'USDC' ? "0.000001" : "0.00000001"}
                     min="0.000001"
                     max="1000000"
                     className={`w-full pl-3 pr-12 py-2 text-sm border-2 rounded-lg focus:outline-none transition-colors ${
-                      errors.amount
+                      sendErrors.amount
                         ? 'border-red-400 focus:border-red-500'
                         : 'border-lavender-web focus:border-teal'
                     }`}
@@ -532,8 +540,8 @@ export default function Home() {
                     {sendToken}
                   </span>
                 </div>
-                {errors.amount && (
-                  <p className="text-red-500 text-[9px] mt-0.5">{errors.amount}</p>
+                {sendErrors.amount && (
+                  <p className="text-red-500 text-[9px] mt-0.5">{sendErrors.amount}</p>
                 )}
               </div>
 
@@ -544,20 +552,20 @@ export default function Home() {
                 </label>
                 <input
                   type="text"
-                  value={recipient}
+                  value={sendRecipient}
                   onChange={(e) => {
-                    setRecipient(e.target.value);
-                    if (errors.recipient) setErrors({ ...errors, recipient: undefined });
+                    setSendRecipient(e.target.value);
+                    if (sendErrors.recipient) setSendErrors({ ...sendErrors, recipient: undefined });
                   }}
                   placeholder="alice@example.com or 0x..."
                   className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none transition-colors ${
-                    errors.recipient
+                    sendErrors.recipient
                       ? 'border-red-400 focus:border-red-500'
                       : 'border-lavender-web focus:border-teal'
                   }`}
                 />
-                {errors.recipient && (
-                  <p className="text-red-500 text-[9px] mt-0.5">{errors.recipient}</p>
+                {sendErrors.recipient && (
+                  <p className="text-red-500 text-[9px] mt-0.5">{sendErrors.recipient}</p>
                 )}
               </div>
 
@@ -566,96 +574,84 @@ export default function Home() {
                 onClick={async () => {
                   // Check if signed in
                   if (!userEmail || !userAddress) {
-                    setErrors({ amount: "Please sign in to send payments" });
+                    setSendErrors({ amount: "Please sign in to send payments" });
                     return;
                   }
 
                   // Validate
-                  const amountValidation = validatePaymentAmount(amount);
+                  const amountValidation = validatePaymentAmount(sendAmount, sendToken);
                   if (!amountValidation.isValid) {
-                    setErrors({ amount: amountValidation.error });
+                    setSendErrors({ amount: amountValidation.error });
                     return;
                   }
 
                   // Detect email vs address
                   const aptosAddressRegex = /^0x[a-fA-F0-9]{64}$/;
                   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                  const isAddress = aptosAddressRegex.test(recipient.trim());
-                  const isEmail = emailRegex.test(recipient.trim());
+                  const isAddress = aptosAddressRegex.test(sendRecipient.trim());
+                  const isEmail = emailRegex.test(sendRecipient.trim());
 
                   if (!isAddress && !isEmail) {
-                    setErrors({ recipient: "Enter a valid email or Aptos address" });
+                    setSendErrors({ recipient: "Enter a valid email or Aptos address" });
                     return;
                   }
 
-                  setLoading(true);
-                  setErrors({});
+                  setSendLoading(true);
+                  setSendErrors({});
 
                   try {
-                    // Get sender credentials
-                    const jwt = sessionStorage.getItem("jwt_token");
-                    const ephemeralKeyPairStr = sessionStorage.getItem("ephemeral_keypair");
+                    // Get keyless account from client-side storage
+                    const keylessAccount = await getKeylessAccount();
 
-                    if (!jwt || !ephemeralKeyPairStr) {
-                      setErrors({ amount: "Please sign in again to send payments" });
-                      setLoading(false);
+                    if (!keylessAccount) {
+                      setSendErrors({ amount: "Please sign in again to send payments" });
+                      setSendLoading(false);
                       return;
                     }
 
-                    let recipientAddr = recipient.trim();
+                    let recipientAddr = sendRecipient.trim();
 
                     // If email, resolve to address
                     if (isEmail) {
                       const resolveResponse = await fetch("/api/resolve-email", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ email: recipient.trim() }),
+                        body: JSON.stringify({ email: sendRecipient.trim() }),
                       });
 
                       const resolveData = await resolveResponse.json();
 
                       if (!resolveResponse.ok) {
-                        setErrors({ recipient: resolveData.error });
-                        setLoading(false);
+                        setSendErrors({ recipient: resolveData.error });
+                        setSendLoading(false);
                         return;
                       }
 
                       recipientAddr = resolveData.aptosAddress;
                     }
 
-                    // Direct transfer to address
-                    const response = await fetch("/api/payments/send-direct", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        amount: parseFloat(amount),
-                        recipientAddress: recipientAddr,
-                        token: sendToken,
-                        jwt,
-                        ephemeralKeyPairStr,
-                      }),
-                    });
+                    // Execute transfer directly from client
+                    const transactionHash = await transfer(
+                      keylessAccount,
+                      recipientAddr,
+                      parseFloat(sendAmount),
+                      sendToken
+                    );
 
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                      throw new Error(data.error || "Transfer failed");
-                    }
-
-                    alert(`✅ Sent ${amount} ${sendToken} to ${isEmail ? recipient.trim() : 'address'}! Transaction: ${data.transactionHash}`);
-                    setAmount("");
-                    setRecipient("");
+                    alert(`✅ Sent ${sendAmount} ${sendToken} to ${isEmail ? sendRecipient.trim() : 'address'}! Transaction: ${transactionHash}`);
+                    setSendAmount("");
+                    setSendRecipient("");
                   } catch (error) {
                     console.error("Send error:", error);
-                    setErrors({ amount: error instanceof Error ? error.message : "Failed to send" });
+                    setSendErrors({ amount: error instanceof Error ? error.message : "Failed to send" });
                   } finally {
-                    setLoading(false);
+                    setSendLoading(false);
                   }
                 }}
-                disabled={!amount || !recipient || loading}
+                disabled={!sendAmount || !sendRecipient || sendLoading}
                 className="w-full py-2.5 bg-gunmetal text-white rounded-lg font-semibold text-xs hover:bg-gunmetal/90 disabled:bg-lavender-web disabled:text-gunmetal/30 transition-all"
               >
-                {loading ? "Sending..." : "Send"}
+                {sendLoading ? "Sending..." : "Send"}
               </button>
 
               {/* Hero Text in Send Card */}
@@ -725,14 +721,14 @@ export default function Home() {
                 </div>
 
                 <p className="text-sm text-gunmetal/60 mb-4">
-                  Send this link to <span className="font-medium text-gunmetal">{recipient}</span> to receive <span className="font-medium text-gunmetal">${amount}</span>
+                  Send this link to <span className="font-medium text-gunmetal">{receiveRecipient}</span> to receive <span className="font-medium text-gunmetal">${receiveAmount}</span>
                 </p>
 
                 {/* Share Buttons */}
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-gunmetal/60">Share via:</span>
                   <a
-                    href={`mailto:${recipient}?subject=You've got money!&body=Hey! I'm sending you $${amount} via Aptfy. Click here to claim: ${paymentLink}`}
+                    href={`mailto:${receiveRecipient}?subject=You've got money!&body=Hey! I'm sending you $${receiveAmount} via Aptfy. Click here to claim: ${paymentLink}`}
                     className="px-3 py-2 bg-white border-2 border-columbia-blue text-gunmetal rounded-lg hover:bg-columbia-blue/20 transition-all text-xs font-medium inline-flex items-center space-x-1"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -741,7 +737,7 @@ export default function Home() {
                     <span>Email</span>
                   </a>
                   <a
-                    href={`https://wa.me/?text=Hey! I'm sending you $${amount} via Aptfy. Click here to claim: ${encodeURIComponent(paymentLink)}`}
+                    href={`https://wa.me/?text=Hey! I'm sending you $${receiveAmount} via Aptfy. Click here to claim: ${encodeURIComponent(paymentLink)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-2 bg-white border-2 border-columbia-blue text-gunmetal rounded-lg hover:bg-columbia-blue/20 transition-all text-xs font-medium inline-flex items-center space-x-1"
@@ -752,7 +748,7 @@ export default function Home() {
                     <span>WhatsApp</span>
                   </a>
                   <a
-                    href={`https://twitter.com/intent/tweet?text=I'm sending you $${amount} via Aptfy! Claim it here: ${encodeURIComponent(paymentLink)}`}
+                    href={`https://twitter.com/intent/tweet?text=I'm sending you $${receiveAmount} via Aptfy! Claim it here: ${encodeURIComponent(paymentLink)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-2 bg-white border-2 border-columbia-blue text-gunmetal rounded-lg hover:bg-columbia-blue/20 transition-all text-xs font-medium inline-flex items-center space-x-1"

@@ -6,15 +6,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { transfer, getBalance } from "@/lib/aptos";
 import { TokenSymbol } from "@/lib/tokens";
-import { EphemeralKeyPair } from "@aptos-labs/ts-sdk";
-import { deriveKeylessAccount } from "@/lib/keyless";
+import { getEphemeralKeyPair, deriveKeylessAccount } from "@/lib/keyless";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { amount, recipientAddress, jwt, ephemeralKeyPairStr, token = 'APT' } = body;
+    const { amount, recipientAddress, jwt, nonce, token = 'APT' } = body;
 
-    if (!amount || !recipientAddress || !jwt || !ephemeralKeyPairStr) {
+    if (!amount || !recipientAddress || !jwt || !nonce) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -38,9 +37,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Reconstruct sender's KeylessAccount
-    const ephemeralKeyPair = EphemeralKeyPair.fromBytes(
-      Uint8Array.from(JSON.parse(ephemeralKeyPairStr).data)
-    );
+    const ephemeralKeyPair = getEphemeralKeyPair(nonce);
+
+    if (!ephemeralKeyPair) {
+      return NextResponse.json(
+        { error: "Ephemeral key pair not found. Please sign in again." },
+        { status: 401 }
+      );
+    }
+
     const senderAccount = await deriveKeylessAccount(jwt, ephemeralKeyPair);
 
     // Check sender balance

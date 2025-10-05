@@ -8,8 +8,7 @@ import QRScanner from "@/components/QRScanner";
 import { PaymentRequest } from "@/lib/qr";
 import { formatAmount } from "@/lib/tokens";
 import { transfer } from "@/lib/aptos";
-import { EphemeralKeyPair } from "@aptos-labs/ts-sdk";
-import { deriveKeylessAccount } from "@/lib/keyless";
+import { getKeylessAccount } from "@/lib/keyless";
 
 export default function ScanPage() {
   const [loading, setLoading] = useState(true);
@@ -49,19 +48,12 @@ export default function ScanPage() {
     setError("");
 
     try {
-      // Get stored credentials
-      const jwt = sessionStorage.getItem("google_jwt");
-      const ephemeralKeyPairStr = sessionStorage.getItem("ephemeral_keypair");
+      // Get keyless account from client-side storage
+      const keylessAccount = await getKeylessAccount();
 
-      if (!jwt || !ephemeralKeyPairStr) {
+      if (!keylessAccount) {
         throw new Error("Authentication expired. Please sign in again.");
       }
-
-      // Derive keyless account
-      const ephemeralKeyPair = EphemeralKeyPair.fromBytes(
-        Uint8Array.from(JSON.parse(ephemeralKeyPairStr).data)
-      );
-      const keylessAccount = await deriveKeylessAccount(jwt, ephemeralKeyPair);
 
       // Execute transfer
       const hash = await transfer(

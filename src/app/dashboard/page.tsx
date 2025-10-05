@@ -7,6 +7,8 @@ import Image from "next/image";
 import { getBalance } from "@/lib/aptos";
 import { formatAmount } from "@/lib/tokens";
 import TransactionHistory from "@/components/TransactionHistory";
+import Lottie from "lottie-react";
+import mascotAnimation from "../../../public/Mascot.json";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -104,10 +106,20 @@ export default function DashboardPage() {
       </nav>
 
       <main className="container mx-auto px-6 py-12 max-w-6xl">
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-gunmetal mb-3">Dashboard</h1>
-          <p className="text-lg text-gunmetal/60">Manage your account</p>
+        {/* Header with Mascot */}
+        <div className="mb-12 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-gunmetal mb-3">Dashboard</h1>
+            <p className="text-lg text-gunmetal/60">Manage your account</p>
+          </div>
+          <div className="w-32 h-32">
+            <Lottie
+              animationData={mascotAnimation}
+              loop={true}
+              autoplay={true}
+              style={{ width: '100%', height: '100%' }}
+            />
+          </div>
         </div>
 
         {/* Main Grid */}
@@ -161,7 +173,7 @@ export default function DashboardPage() {
               <h2 className="text-xl font-semibold text-gunmetal mb-6">Quick Actions</h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <Link
-                  href="/#send"
+                  href="/send"
                   className="group p-6 bg-gradient-to-br from-gunmetal to-gunmetal/90 text-white rounded-xl hover:shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -179,7 +191,7 @@ export default function DashboardPage() {
                 </Link>
 
                 <Link
-                  href="/#receive"
+                  href="/receive"
                   className="group p-6 bg-gradient-to-br from-teal to-teal/90 text-white rounded-xl hover:shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <div className="flex items-start justify-between mb-3">

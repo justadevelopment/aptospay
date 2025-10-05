@@ -8,17 +8,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPrisma } from "@/lib/db";
 import { transfer, getBalance } from "@/lib/aptos";
 import { TokenSymbol } from "@/lib/tokens";
-import { EphemeralKeyPair } from "@aptos-labs/ts-sdk";
-import { deriveKeylessAccount } from "@/lib/keyless";
+import { getEphemeralKeyPair, deriveKeylessAccount } from "@/lib/keyless";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { paymentId, jwt, ephemeralKeyPairStr } = body;
+  const { paymentId, jwt, nonce } = body;
 
   try {
-    if (!paymentId || !jwt || !ephemeralKeyPairStr) {
+    if (!paymentId || !jwt || !nonce) {
       return NextResponse.json(
-        { error: "Missing required fields: paymentId, jwt, ephemeralKeyPairStr" },
+        { error: "Missing required fields: paymentId, jwt, nonce" },
         { status: 400 }
       );
     }
@@ -58,10 +57,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Reconstruct sender's KeylessAccount from JWT
-    const ephemeralKeyPair = EphemeralKeyPair.fromBytes(
-      Uint8Array.from(JSON.parse(ephemeralKeyPairStr).data)
-    );
+    // Reconstruct sender's KeylessAccount from JWT and nonce
+    const ephemeralKeyPair = getEphemeralKeyPair(nonce);
+
+    if (!ephemeralKeyPair) {
+      return NextResponse.json(
+        { error: "Ephemeral key pair not found. Please sign in again." },
+        { status: 401 }
+      );
+    }
+
     const senderAccount = await deriveKeylessAccount(jwt, ephemeralKeyPair);
 
     // Verify sender address matches
