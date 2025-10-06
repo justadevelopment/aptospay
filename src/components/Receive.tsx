@@ -8,11 +8,7 @@ import { TokenSymbol, getSupportedTokens } from "@/lib/tokens";
 import { getBalance } from "@/lib/aptos";
 import PaymentLinkDialog from "./PaymentLinkDialog";
 
-interface ReceiveProps {
-  showPaymentLink?: boolean;
-}
-
-export default function Receive({ showPaymentLink = true }: ReceiveProps) {
+export default function Receive() {
   const [receiveAmount, setReceiveAmount] = useState("");
   const [receiveRecipient, setReceiveRecipient] = useState("");
   const [receiveToken, setReceiveToken] = useState<TokenSymbol>("APT");
@@ -39,6 +35,7 @@ export default function Receive({ showPaymentLink = true }: ReceiveProps) {
       setUserAddress(address);
       fetchBalance(address, receiveToken);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch balance when token changes
@@ -46,6 +43,7 @@ export default function Receive({ showPaymentLink = true }: ReceiveProps) {
     if (userAddress) {
       fetchBalance(userAddress, receiveToken);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [receiveToken, userAddress]);
 
   const fetchBalance = async (address: string, token: TokenSymbol) => {

@@ -34,6 +34,7 @@ export default function Send() {
     if (address) {
       fetchBalance(address, sendToken);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch balance when token changes
@@ -41,6 +42,7 @@ export default function Send() {
     if (userAddress) {
       fetchBalance(userAddress, sendToken);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sendToken, userAddress]);
 
   const fetchBalance = async (address: string, token: TokenSymbol) => {
@@ -113,7 +115,7 @@ export default function Send() {
         let resolveData;
         try {
           resolveData = await resolveResponse.json();
-        } catch (jsonError) {
+        } catch {
           setDialogStatus("error");
           setDialogError("Failed to resolve email address. Please try again.");
           setSendLoading(false);

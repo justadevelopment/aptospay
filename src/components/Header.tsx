@@ -9,6 +9,7 @@ import { generateEphemeralKeyPair, storeEphemeralKeyPair, createGoogleAuthUrl } 
 
 export default function Header() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [userAddress, setUserAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);

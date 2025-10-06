@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import Header from "@/components/Header";
 import Receive from "@/components/Receive";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
@@ -13,81 +14,19 @@ import "@fontsource/outfit/500.css";
 import "@fontsource/outfit/600.css";
 
 export default function ReceivePage() {
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const email = sessionStorage.getItem("user_email");
-    setUserEmail(email);
 
     if (!email) {
       router.push("/");
     }
   }, [router]);
 
-  const handleSignOut = () => {
-    sessionStorage.clear();
-    router.push("/");
-  };
-
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="border-b border-lavender-web">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/aptfy.png"
-              alt="Aptfy Logo"
-              width={28}
-              height={28}
-              className="h-7 w-7"
-              priority
-            />
-            <span className="text-xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptfy</span>
-          </Link>
-
-          <div className="flex items-center space-x-4">
-            {userEmail ? (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="text-gunmetal hover:text-teal transition-colors font-medium"
-                >
-                  Dashboard
-                </Link>
-
-                <Link
-                  href="/send"
-                  className="text-gunmetal hover:text-teal transition-colors font-medium"
-                >
-                  Send
-                </Link>
-
-                <Link
-                  href="/transactions"
-                  className="text-gunmetal hover:text-teal transition-colors font-medium"
-                >
-                  Transactions
-                </Link>
-
-                <div className="flex items-center space-x-3">
-                  <div className="text-right">
-                    <p className="text-xs text-gunmetal/60">Signed in as</p>
-                    <p className="text-sm font-medium text-gunmetal truncate max-w-[150px]">{userEmail}</p>
-                  </div>
-                  <button
-                    onClick={handleSignOut}
-                    className="px-4 py-2 text-sm border-2 border-lavender-web text-gunmetal rounded-lg hover:bg-lavender-web/30 transition-colors font-medium"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              </>
-            ) : null}
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       <main className="container mx-auto px-6 py-12">
         {/* Page Header */}
@@ -102,7 +41,7 @@ export default function ReceivePage() {
 
         {/* Receive Component */}
         <div className="max-w-2xl mx-auto">
-          <Receive showPaymentLink={true} />
+          <Receive />
         </div>
 
         {/* Features Section */}

@@ -29,9 +29,6 @@ export default function PaymentClaimPage({
 
   useEffect(() => {
     const fetchPaymentDetails = async () => {
-      const resolvedParams = await params;
-      const pathParams = resolvedParams.params;
-
       // Get payment ID from query params
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get("id");

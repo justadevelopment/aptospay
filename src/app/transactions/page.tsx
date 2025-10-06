@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import Header from "@/components/Header";
 import "@fontsource/outfit/400.css";
 import "@fontsource/outfit/500.css";
 import "@fontsource/outfit/600.css";
@@ -37,7 +37,6 @@ export default function TransactionsPage() {
   const [summary, setSummary] = useState<TransactionSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const email = sessionStorage.getItem("user_email");
@@ -48,7 +47,6 @@ export default function TransactionsPage() {
       return;
     }
 
-    setUserEmail(email);
     fetchTransactions(address);
   }, [router]);
 
@@ -98,43 +96,7 @@ export default function TransactionsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="border-b border-lavender-web">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/aptfy.png"
-                alt="Aptfy Logo"
-                width={32}
-                height={32}
-                className="h-8 w-8"
-                priority
-              />
-              <span className="text-2xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                aptfy
-              </span>
-            </Link>
-
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/dashboard"
-                className="text-gunmetal hover:text-teal transition-colors font-medium"
-              >
-                Dashboard
-              </Link>
-              {userEmail && (
-                <div className="text-right">
-                  <p className="text-xs text-gunmetal/60">Signed in as</p>
-                  <p className="text-sm font-medium text-gunmetal truncate max-w-[150px]">
-                    {userEmail}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       <main className="container mx-auto px-6 py-12">
         {/* Header */}

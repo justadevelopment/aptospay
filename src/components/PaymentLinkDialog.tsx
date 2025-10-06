@@ -106,6 +106,7 @@ export default function PaymentLinkDialog({
               {/* QR Code */}
               {qrCodeDataUrl && (
                 <div className="mb-6 p-4 bg-white border-2 border-teal/30 rounded-xl">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={qrCodeDataUrl} alt="Payment QR Code" className="w-full max-w-[250px] mx-auto" />
                   <p className="text-xs text-gunmetal/60 text-center mt-2">Scan to pay</p>
                 </div>

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     if (!mapping) {
       return NextResponse.json(
         {
-          error: "Email not found. Recipient must sign in to AptosPay first to create their account.",
+          error: "Email not found. Recipient must sign in to Aptfy first to create their account.",
           exists: false
         },
         { status: 404 }

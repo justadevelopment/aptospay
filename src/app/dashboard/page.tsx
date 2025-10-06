@@ -105,9 +105,9 @@ export default function DashboardPage() {
             <div className="bg-white border-2 border-lavender-web rounded-2xl p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gunmetal">Balances</h2>
-                <span className="px-3 py-1 bg-green-50 text-green-600 text-sm font-medium rounded-full">
-                  Active
-                </span>
+                {/* <span className="px-3 py-1 bg-green-50 text-green-600 text-sm font-medium rounded-full">
+                  Updated
+                </span> */}
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">

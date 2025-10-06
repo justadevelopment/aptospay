@@ -35,40 +35,31 @@ function ExecutePaymentContent() {
 
     // Fetch payment details
     const fetchPayment = async () => {
-      try {
-        const response = await fetch(`/api/payments/${paymentId}`);
+      const result = await safeFetch<{
+        id: string;
+        amount: number;
+        recipientEmail: string;
+        recipientAddress: string | null;
+        token: string;
+        status: string;
+        transactionHash: string | null;
+      }>(`/api/payments/${paymentId}`);
 
-        // Check content type to ensure we got JSON
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          console.error("Expected JSON but got:", contentType);
-          setError("Server error - please try again later");
-          setLoading(false);
-          return;
-        }
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          setError(data.error || "Payment not found");
-          setLoading(false);
-          return;
-        }
-
-        // Check if payment already completed
-        if (data.status === "claimed" || data.transactionHash) {
-          setError("This payment has already been completed");
-          setLoading(false);
-          return;
-        }
-
-        setPayment(data);
+      if (result.error || !result.data) {
+        setError(result.error || "Failed to load payment details");
         setLoading(false);
-      } catch (err) {
-        console.error("Error fetching payment:", err);
-        setError(err instanceof Error ? err.message : "Failed to load payment details");
-        setLoading(false);
+        return;
       }
+
+      // Check if payment already completed
+      if (result.data.status === "claimed" || result.data.transactionHash) {
+        setError("This payment has already been completed");
+        setLoading(false);
+        return;
+      }
+
+      setPayment(result.data);
+      setLoading(false);
     };
 
     fetchPayment();

@@ -124,13 +124,13 @@ export default function AuthCallbackPage() {
           <div className="flex items-center justify-center gap-2 mb-8">
             <Image
               src="/aptfy.png"
-              alt="AptosPay Logo"
+              alt="Aptfy Logo"
               width={32}
               height={32}
               className="h-8 w-8"
               priority
             />
-            <span className="text-2xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+            <span className="text-2xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptfy</span>
           </div>
 
           {/* Error Card */}
@@ -162,13 +162,13 @@ export default function AuthCallbackPage() {
           <div className="flex items-center gap-2 mb-8">
             <Image
               src="/aptfy.png"
-              alt="AptosPay Logo"
+              alt="Aptfy Logo"
               width={32}
               height={32}
               className="h-8 w-8"
               priority
             />
-            <span className="text-2xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptospay</span>
+            <span className="text-2xl font-semibold text-gunmetal" style={{ fontFamily: "'Outfit', sans-serif" }}>aptfy</span>
           </div>
 
           {/* Loading State */}

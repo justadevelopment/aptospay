@@ -23,6 +23,7 @@ export default function SendPaymentPage({
     amount: number;
     recipientEmail: string;
     recipientAddress: string | null;
+    token: string;
     status: string;
     transactionHash: string | null;
   } | null>(null);

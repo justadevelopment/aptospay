@@ -15,7 +15,7 @@ Three production smart contracts deployed as modules:
 
 - **Email Payments**: Send to email addresses instead of blockchain addresses
 - **Keyless Accounts**: Recipients sign in with Google, no seed phrases or wallet downloads
-- **DeFi Primitives**: Vesting streams (salary streaming), enhanced escrow (time locks + arbitration), and P2P lending (NEW!)
+- **DeFi Primitives**: Vesting streams (salary streaming), enhanced escrow (time locks + arbitration), and P2P lending
 - **P2P Lending**: Supply APT to earn interest, borrow against collateral with dynamic rates (0-110% APR)
 - **Multi-Token**: APT and USDC (via Fungible Asset standard)
 - **Sub-second finality**: Aptos processes transactions in under 1 second
@@ -161,8 +161,8 @@ contracts/
     vesting_stream.move     # Salary streaming contract
     escrow_v2.move          # Enhanced escrow with time locks
     payment_escrow.move     # Original escrow
-    p2p_lending.move        # P2P lending protocol (NEW!)
-  tests/                    # 74 Move unit tests (100% passing)
+    p2p_lending.move        # P2P lending protocol
+  tests/                    # 74 Move unit tests
 
 src/
   app/
@@ -221,7 +221,7 @@ Gas cost: ~4,500 Octas (~$0.000045) per deployment transaction
 ```bash
 cd contracts && aptos move test
 # Vesting: 13 tests | Escrow V2: 16 tests | Payment: 14 tests | P2P Lending: 31 tests
-# Total: 74/74 passing (100% coverage)
+# Total: 74/74 passing 
 ```
 
 **Frontend Build**:
