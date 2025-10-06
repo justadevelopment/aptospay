@@ -6,7 +6,7 @@ DeFi platform on Aptos with keyless accounts. Send APT or USDC via email with Go
 
 **DevNote**: I wanted to name the app Aptospay, but during some market research I found out that there is already an existing Aptospay, so I decided to change the name to Aptfy. There might still be some aptospay fragments in the code, aiming this will clear up confusion if so.
 
-**Contract Address**: `0x2b6848d433930a6cec8b474f9adcf2d58a1f5f88d5e17f8718a0a93737660efe`
+<!-- **Contract Address**: `0x2b6848d433930a6cec8b474f9adcf2d58a1f5f88d5e17f8718a0a93737660efe` -->
 
 Three production smart contracts deployed as modules:
 - **Vesting Streams**: [`0x045c65b5...8d9639`](https://explorer.aptoslabs.com/txn/0x045c65b5c3276d25b91a52242136442cbcf8d10a97c4c565e5102e982e8d9639?network=testnet)
