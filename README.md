@@ -1,5 +1,7 @@
 # Aptfy
 
+![](public/home.png)
+
 DeFi platform on Aptos with keyless accounts. Send APT or USDC via email with Google OAuth authentication—no wallet setup required. Includes P2P lending with dynamic interest rates (0-110% APR), collateralized borrowing at 75% LTV, automated liquidations, vesting streams for salary payments, and escrow contracts with time-locks and third-party arbitration.
 
 **DevNote**: I wanted to name the app Aptospay, but during some market research I found out that there is already an existing Aptospay, so I decided to change the name to Aptfy. There might still be some aptospay fragments in the code, aiming this will clear up confusion if so.
