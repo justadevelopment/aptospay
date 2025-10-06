@@ -103,6 +103,8 @@ NEXT_PUBLIC_ESCROW_MODULE_ADDRESS=0x2b6848d433930a6cec8b474f9adcf2d58a1f5f88d5e1
 
 ## Usage
 
+![](public/dashboard.png)
+
 ### Creating Payment Link
 1. Sign in with Google
 2. Enter amount and recipient email

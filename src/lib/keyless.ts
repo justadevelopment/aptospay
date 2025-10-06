@@ -112,10 +112,42 @@ export async function deriveKeylessAccount(
   return keylessAccount;
 }
 
+/**
+ * Get the correct redirect URI based on the current domain.
+ * Supports multiple production domains and localhost.
+ */
+function getRedirectUri(): string {
+  // Only run on client side
+  if (typeof window === "undefined") {
+    // Server-side fallback (won't be used for OAuth flow which is client-side)
+    return process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI ||
+           `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`;
+  }
+
+  const origin = window.location.origin;
+
+  // Allowed domains
+  const allowedDomains = [
+    'https://aptfy.xyz',
+    'https://www.aptfy.xyz',
+    'https://aptfy.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001',
+  ];
+
+  // Check if current origin is in allowed list
+  if (allowedDomains.includes(origin)) {
+    return `${origin}/auth/callback`;
+  }
+
+  // Fallback to env variable or localhost
+  return process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI ||
+         'http://localhost:3000/auth/callback';
+}
+
 export function createGoogleAuthUrl(nonce: string): string {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI ||
-    `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`;
+  const redirectUri = getRedirectUri();
 
   if (!clientId) {
     throw new Error("Google OAuth Client ID is missing. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID");

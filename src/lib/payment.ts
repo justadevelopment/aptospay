@@ -61,11 +61,22 @@ export function generateLinkId(): string {
     Math.random().toString(36).substring(2, 15);
 }
 
+/**
+ * Get the base URL for the application.
+ * Uses window.location.origin on client side, falls back to env variable on server.
+ */
+function getBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+}
+
 export function generatePaymentUrl(
   amount: number,
   recipientEmail: string
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = getBaseUrl();
   return `${baseUrl}/pay/${amount}/to/${recipientEmail}`;
 }
 

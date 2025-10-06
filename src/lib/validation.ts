@@ -200,9 +200,7 @@ export function validateNonce(nonce: string): ValidationResult {
 export function validateEnvironmentConfig(): ValidationResult {
   const requiredEnvVars = [
     'NEXT_PUBLIC_GOOGLE_CLIENT_ID',
-    'NEXT_PUBLIC_GOOGLE_REDIRECT_URI',
     'NEXT_PUBLIC_APTOS_NETWORK',
-    'NEXT_PUBLIC_APP_URL'
   ];
 
   const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
@@ -223,15 +221,17 @@ export function validateEnvironmentConfig(): ValidationResult {
     };
   }
 
-  // Validate redirect URI
-  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI!;
-  try {
-    new URL(redirectUri);
-  } catch {
-    return {
-      isValid: false,
-      error: 'Invalid redirect URI format'
-    };
+  // Validate redirect URI if provided (optional - computed dynamically otherwise)
+  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
+  if (redirectUri) {
+    try {
+      new URL(redirectUri);
+    } catch {
+      return {
+        isValid: false,
+        error: 'Invalid redirect URI format'
+      };
+    }
   }
 
   // Validate Aptos network
